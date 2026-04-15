@@ -39,7 +39,7 @@ class CPUGroupWidget(QWidget):
     def refresh_freq_and_proc_stat(self):
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
-            cpu.refresh_current_freq_and_proc_stat()
+            cpu.refresh_current_freq()
             if cpu.cpu_data.name not in self._proc_stat:
                 continue
 

@@ -49,7 +49,8 @@ class CPUWidget(QWidget):
         self._spinbox_max.setDisabled(processing)
         self.signal_processing.emit(processing)
 
-    def refresh_current_freq_and_proc_stat(self) -> None:
+
+    def refresh_current_freq(self) -> None:
         try:
             self._cpu_data.load_current_freq()
             color: str = get_color_based_on_value(self._cpu_data.current_frequency,
