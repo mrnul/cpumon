@@ -15,25 +15,21 @@ def parse_proc_stat():
                 continue
 
             parts = line.split()
-
             cpu_id = parts[0]
             stats = list(map(int, parts[1:]))
-            cpu_stats.update(
-                {
-                    cpu_id: ProcStat(
-                        cpu_id=cpu_id,
-                        user_time=stats[0],
-                        nice_time=stats[1],
-                        system_time=stats[2],
-                        idle_time=stats[3],
-                        iowait_time=stats[4],
-                        irq_time=stats[5],
-                        softirq_time=stats[6],
-                        steal_time=stats[7],
-                        guest_time=stats[8] if len(stats) > 8 else 0,
-                        guest_nice_time=stats[9] if len(stats) > 9 else 0,
-                    )
-                }
+
+            cpu_stats[cpu_id] = ProcStat(
+                cpu_id=cpu_id,
+                user_time=stats[0],
+                nice_time=stats[1],
+                system_time=stats[2],
+                idle_time=stats[3],
+                iowait_time=stats[4],
+                irq_time=stats[5],
+                softirq_time=stats[6],
+                steal_time=stats[7],
+                guest_time=stats[8] if len(stats) > 8 else 0,
+                guest_nice_time=stats[9] if len(stats) > 9 else 0,
             )
     return cpu_stats
 

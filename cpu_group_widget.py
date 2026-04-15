@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal, Slot, QMutex
+from PySide6.QtCore import Signal, Slot, QMutex, QMutexLocker
 from PySide6.QtWidgets import QWidget, QGridLayout
 
 from proc_stat import ProcStat
@@ -13,7 +13,7 @@ class CPUGroupWidget(QWidget):
     def __init__(self, cpu_paths: list[str]):
         super().__init__()
 
-        self._mutex = QMutex()
+        self._mutex: QMutex = QMutex()
         self._currently_processing_count: int = 0
         self._proc_stat: dict[str, ProcStat] = {}
 
@@ -25,7 +25,7 @@ class CPUGroupWidget(QWidget):
 
         self._cpu_widgets.sort(key=lambda x: x.cpu_data.index)
 
-        cpus_per_row = 8
+        cpus_per_row: int = 8
 
         for index, cpu_widget in enumerate(self._cpu_widgets):
             cpu_widget.signal_message.connect(self.signal_message.emit)
@@ -61,12 +61,13 @@ class CPUGroupWidget(QWidget):
 
     @Slot(bool)
     def _processing_update(self, processing: bool) -> None:
-        if processing:
-            if self._currently_processing_count == 0:
-                self.signal_processing.emit(True)
-            self._currently_processing_count += 1
-        else:
-            if self._currently_processing_count > 0:
-                self._currently_processing_count -= 1
+        with QMutexLocker(self._mutex):
+            if processing:
                 if self._currently_processing_count == 0:
-                    self.signal_processing.emit(False)
+                    self.signal_processing.emit(True)
+                self._currently_processing_count += 1
+            else:
+                if self._currently_processing_count > 0:
+                    self._currently_processing_count -= 1
+                    if self._currently_processing_count == 0:
+                        self.signal_processing.emit(False)

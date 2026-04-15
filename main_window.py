@@ -10,34 +10,34 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self._central_widget = QWidget()
+        self._central_widget: QWidget = QWidget()
         self.setCentralWidget(self._central_widget)
 
-        self._parent_layout = QVBoxLayout(self._central_widget)
+        self._parent_layout: QVBoxLayout = QVBoxLayout(self._central_widget)
 
-        self._cpus_widget = CPUGroupWidget(discover_cpus())
+        self._cpus_widget: CPUGroupWidget = CPUGroupWidget(discover_cpus())
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
 
-        self._log = QTextBrowser()
+        self._log: QTextBrowser = QTextBrowser()
         self._log.document().setMaximumBlockCount(1000)
 
-        self._master_slider = MasterSliderWidget()
-        self._master_slider_label = QLabel()
+        self._master_slider: MasterSliderWidget = MasterSliderWidget()
+        self._master_slider_label: QLabel = QLabel()
         self._master_slider.slider.valueChanged.connect(self._update_master_slider_label)
         self._master_slider.slider.setValue(50)
 
-        self._apply = QPushButton("Apply Master value")
+        self._apply: QPushButton = QPushButton("Apply Master value")
         self._apply.clicked.connect(self._apply_max_scaling_freq)
 
-        self._refresh = QPushButton("Refresh Now")
+        self._refresh: QPushButton = QPushButton("Refresh Now")
         self._refresh.clicked.connect(self._refresh_now)
 
-        slider_layout = QHBoxLayout()
+        slider_layout: QHBoxLayout = QHBoxLayout()
         slider_layout.addWidget(self._master_slider_label)
         slider_layout.addWidget(self._master_slider)
 
-        button_layout = QVBoxLayout()
+        button_layout: QVBoxLayout = QVBoxLayout()
         button_layout.addWidget(self._apply)
         button_layout.addWidget(self._refresh)
 
@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self._parent_layout.addLayout(button_layout)
         self._parent_layout.addWidget(self._log)
 
-        self._timer = QTimer(self)
+        self._timer: QTimer = QTimer(self)
         self._timer.timeout.connect(self._on_timer)
         self._timer.start(1000)
 

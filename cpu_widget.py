@@ -1,5 +1,5 @@
 from PySide6 import QtCore
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSlider, QSpinBox, QLabel, QPushButton
 
 from cpu_data import CPUData
@@ -13,29 +13,29 @@ class CPUWidget(QWidget):
     def __init__(self, cpu_path: str = ""):
         super().__init__()
 
-        self._cpu_data = CPUData(cpu_path)
+        self._cpu_data: CPUData = CPUData(cpu_path)
         self._cpu_data.load_all_data()
 
-        self._label = QLabel(self._cpu_data.name)
+        self._label: QLabel = QLabel(self._cpu_data.name)
         self._label.setToolTip(self._cpu_data.path)
 
-        self._current_freq = QLabel()
+        self._current_freq: QLabel = QLabel()
 
-        self._slider = QSlider(Qt.Orientation.Horizontal)
+        self._slider: QSlider = QSlider(Qt.Orientation.Horizontal)
         self._slider.setRange(self._cpu_data.min_absolute_frequency, self._cpu_data.max_absolute_frequency)
         self._slider.setValue(self._cpu_data.max_scaling_frequency)
 
-        self._spinbox_max = QSpinBox()
+        self._spinbox_max: QSpinBox = QSpinBox()
         self._spinbox_max.setRange(self._cpu_data.min_absolute_frequency, self._cpu_data.max_absolute_frequency)
         self._spinbox_max.setValue(self._cpu_data.max_scaling_frequency)
 
-        self._apply = QPushButton("Apply")
+        self._apply: QPushButton = QPushButton("Apply")
         self._apply.clicked.connect(self._set_max_scaling_freq_from_spinbox)
 
-        self._slider.valueChanged.connect(lambda value: self._spinbox_max.setValue(value))
-        self._spinbox_max.valueChanged.connect(lambda value: self._slider.setValue(value))
+        self._slider.valueChanged.connect(self._sync_spinbox_to_slider)
+        self._spinbox_max.valueChanged.connect(self._sync_slider_to_spinbox)
 
-        self._layout = QVBoxLayout()
+        self._layout: QVBoxLayout = QVBoxLayout()
         self._layout.addWidget(self._label)
         self._layout.addWidget(self._current_freq)
         self._layout.addWidget(self._slider)
@@ -43,12 +43,23 @@ class CPUWidget(QWidget):
         self._layout.addWidget(self._apply)
         self.setLayout(self._layout)
 
+    @Slot(int)
+    def _sync_slider_to_spinbox(self, value: int) -> None:
+        self._slider.blockSignals(True)
+        self._slider.setValue(value)
+        self._slider.blockSignals(False)
+
+    @Slot(int)
+    def _sync_spinbox_to_slider(self, value: int) -> None:
+        self._spinbox_max.blockSignals(True)
+        self._spinbox_max.setValue(value)
+        self._spinbox_max.blockSignals(False)
+
     def set_processing_state(self, processing: bool) -> None:
         self._apply.setDisabled(processing)
         self._slider.setDisabled(processing)
         self._spinbox_max.setDisabled(processing)
         self.signal_processing.emit(processing)
-
 
     def refresh_current_freq(self) -> None:
         try:
@@ -57,7 +68,7 @@ class CPUWidget(QWidget):
                                                   self._cpu_data.max_absolute_frequency)
             self._current_freq.setText(f"{self._cpu_data.current_frequency}")
             style: str = f"color: {color};"
-            if self._cpu_data.current_frequency > self.cpu_data.max_scaling_frequency:
+            if self._cpu_data.current_frequency > self._cpu_data.max_scaling_frequency:
                 style += f" border: 1px solid {color};"
             self._current_freq.setStyleSheet(style)
         except Exception as e:
@@ -79,7 +90,8 @@ class CPUWidget(QWidget):
             self._spinbox_max.setValue(value)
             self._cpu_data.max_scaling_frequency = value
             write_scaling_max_freq(self._cpu_data.path, self._spinbox_max.value())
-            self.signal_message.emit(f"Max scaling frequency {self._cpu_data.name} changed to: {self._spinbox_max.value()}")
+            self.signal_message.emit(
+                f"Max scaling frequency {self._cpu_data.name} changed to: {self._spinbox_max.value()}")
         except Exception as e:
             self.signal_message.emit(f"Error applying max scaling frequency {self._spinbox_max.value()}: {str(e)}")
         finally:
@@ -112,7 +124,7 @@ class CPUWidget(QWidget):
             tmp_timer.start(1000)
 
     def update_cpu_usage(self, usage: float | int) -> None:
-        self._label.setText(f"{self.cpu_data.name}: {usage}%")
+        self._label.setText(f"{self._cpu_data.name}: {usage}%")
 
         color: str = get_color_based_on_value(usage, 100.)
         style: str = f"color: {color};"
