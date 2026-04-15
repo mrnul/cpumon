@@ -34,8 +34,8 @@ def parse_proc_stat():
     return cpu_stats
 
 
-def get_color_based_on_value(current_freq: int | float, max_freq: int | float) -> str:
-    t: float = float(current_freq) / float(max_freq)
+def get_color_based_on_value(value: int | float, max_value: int | float) -> str:
+    t: float = float(value) / float(max_value)
     h: float = (1. - t) * 0.333
     r, g, b = colorsys.hsv_to_rgb(h, 1., 1.)
     return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"

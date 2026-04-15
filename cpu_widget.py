@@ -64,8 +64,10 @@ class CPUWidget(QWidget):
     def refresh_current_freq(self) -> None:
         try:
             self._cpu_data.load_current_freq()
-            color: str = get_color_based_on_value(self._cpu_data.current_frequency,
-                                                  self._cpu_data.max_absolute_frequency)
+            color: str = get_color_based_on_value(
+                self._cpu_data.current_frequency,
+                self._cpu_data.max_absolute_frequency
+            )
             self._current_freq.setText(f"{self._cpu_data.current_frequency}")
             style: str = f"color: {color};"
             if self._cpu_data.current_frequency > self._cpu_data.max_scaling_frequency:
