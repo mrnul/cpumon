@@ -47,11 +47,8 @@ class MainWindow(QMainWindow):
         self._parent_layout.addWidget(self._log)
 
         self._timer: QTimer = QTimer(self)
-        self._timer.timeout.connect(self._on_timer)
+        self._timer.timeout.connect(self._cpus_widget.refresh_freq_and_proc_stat)
         self._timer.start(1000)
-
-    def _on_timer(self):
-        self._cpus_widget.refresh_freq_and_proc_stat()
 
     def _refresh_now(self):
         self._cpus_widget.refresh_now()

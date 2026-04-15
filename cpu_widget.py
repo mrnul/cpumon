@@ -1,5 +1,4 @@
-from PySide6 import QtCore
-from PySide6.QtCore import Signal, Qt, Slot
+from PySide6.QtCore import Signal, Qt, Slot, QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSlider, QSpinBox, QLabel, QPushButton
 
 from cpu_data import CPUData
@@ -12,6 +11,11 @@ class CPUWidget(QWidget):
 
     def __init__(self, cpu_path: str = ""):
         super().__init__()
+
+        self._refresh_timer: QTimer = QTimer()
+        self._refresh_timer.timeout.connect(self._perform_refresh)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.setInterval(1000)
 
         self._cpu_data: CPUData = CPUData(cpu_path)
         self._cpu_data.load_all_data()
@@ -107,23 +111,20 @@ class CPUWidget(QWidget):
         self._spinbox_max.setValue(value)
         self._set_max_scaling_freq_from_spinbox()
 
-    def refresh_static_data(self, now: bool = False) -> None:
-        def perform_refresh():
-            try:
-                self._cpu_data.load_static_data()
-                self._spinbox_max.setValue(self._cpu_data.max_scaling_frequency)
-            except Exception as e:
-                self.signal_message.emit(f"Error refreshing static data {self._cpu_data.name}: {str(e)}")
-            finally:
-                self.set_processing_state(False)
+    def _perform_refresh(self):
+        try:
+            self._cpu_data.load_static_data()
+            self._spinbox_max.setValue(self._cpu_data.max_scaling_frequency)
+        except Exception as e:
+            self.signal_message.emit(f"Error refreshing static data {self._cpu_data.name}: {str(e)}")
+        finally:
+            self.set_processing_state(False)
 
+    def refresh_static_data(self, now: bool = False) -> None:
         if now:
-            perform_refresh()
+            self._perform_refresh()
         else:
-            tmp_timer = QtCore.QTimer(self)
-            tmp_timer.setSingleShot(True)
-            tmp_timer.timeout.connect(perform_refresh)
-            tmp_timer.start(1000)
+            self._refresh_timer.start(1000)
 
     def update_cpu_usage(self, usage: float | int) -> None:
         self._label.setText(f"{self._cpu_data.name}: {usage}%")
