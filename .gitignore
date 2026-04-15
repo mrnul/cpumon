@@ -1,0 +1,14 @@
+
+.idea/
+
+__pycache__/
+
+build/
+
+dist/
+
+.venv/
+
+*.spec
+
+run.sh
