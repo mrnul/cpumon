@@ -25,10 +25,11 @@ class MainWindow(QMainWindow):
         self._master_slider: MasterSliderWidget = MasterSliderWidget()
         self._master_slider_label: QLabel = QLabel()
         self._master_slider.slider.valueChanged.connect(self._update_master_slider_label)
-        self._master_slider.slider.setValue(round(self._cpus_widget.avg_max_scaling_freq()))
+        cur_min_value, _ = self._master_slider.slider.value()
+        self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
 
-        self._apply: QPushButton = QPushButton("Apply Master value")
-        self._apply.clicked.connect(self._apply_max_scaling_freq)
+        self._apply: QPushButton = QPushButton("Apply Master values")
+        self._apply.clicked.connect(self._apply_master_values)
 
         self._refresh: QPushButton = QPushButton("Refresh All Now")
         self._refresh.clicked.connect(self._refresh_now)
@@ -47,9 +48,10 @@ class MainWindow(QMainWindow):
         self._parent_layout.addWidget(self._log)
 
         self._timer: QTimer = QTimer(self)
-        self._timer.timeout.connect(self._cpus_widget.refresh_freq_and_proc_stat)
+        self._timer.timeout.connect(self._cpus_widget.periodic_refresh)
         self._timer.start(1000)
 
+    @Slot()
     def _refresh_now(self):
         self._cpus_widget.refresh_now()
         self._log.append("Data refreshed")
@@ -59,9 +61,9 @@ class MainWindow(QMainWindow):
         self._apply.setDisabled(processing)
         self._refresh.setDisabled(processing)
         self._master_slider.setDisabled(processing)
-        self._log.append("Processing started" if processing else "Processing finished")
         if not processing:
-            self._master_slider.slider.setValue(round(self._cpus_widget.avg_max_scaling_freq()))
+            self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
+        self._log.append("Processing started" if processing else "Processing finished")
 
     @Slot()
     def _update_master_slider_label(self) -> None:
@@ -69,8 +71,8 @@ class MainWindow(QMainWindow):
         self._master_slider_label.setText(f"Master value: {value}%")
 
     @Slot()
-    def _apply_max_scaling_freq(self) -> None:
-        self._cpus_widget.apply_master_value(self._master_slider.slider.value())
+    def _apply_master_values(self) -> None:
+        self._cpus_widget.apply_master_values(self._master_slider.slider.value()[:2])  # slicing to stop type warning
 
     @Slot(str)
     def _handle_message(self, message: str) -> None:

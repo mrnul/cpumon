@@ -37,10 +37,10 @@ class CPUGroupWidget(QWidget):
 
         self.setLayout(self._layout)
 
-    def refresh_freq_and_proc_stat(self):
+    def periodic_refresh(self):
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
-            cpu.refresh_current_freq()
+            cpu.refresh_current_freq_and_governor()
             if cpu.cpu_data.name not in self._proc_stat:
                 continue
 
@@ -50,21 +50,24 @@ class CPUGroupWidget(QWidget):
 
         self._proc_stat = new_proc_stat
 
-    def avg_max_scaling_freq(self) -> float:
-        result: float = 0.
+    def avg_min_max_scaling_freq_percentage(self) -> tuple[float, float]:
+        avg_min: float = 0.
+        avg_max: float = 0.
         for cpu in self._cpu_widgets:
-            result += cpu.cpu_data[CPUDataEnum.SCALING_MAX_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
-        return result * 100. / len(self._cpu_widgets)
+            avg_min += cpu.cpu_data[CPUDataEnum.SCALING_MIN_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
+            avg_max += cpu.cpu_data[CPUDataEnum.SCALING_MAX_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
+        return avg_min * 100. / len(self._cpu_widgets), avg_max * 100. / len(self._cpu_widgets)
 
     def refresh_now(self) -> None:
         for cpu in self._cpu_widgets:
             cpu.refresh_static_data(True)
-        self.refresh_freq_and_proc_stat()
+        self.periodic_refresh()
 
-    def apply_master_value(self, percentage: int) -> None:
+    def apply_master_values(self, percentages: tuple[int, int]) -> None:
         for cpu in self._cpu_widgets:
-            new_value: int = percentage * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
-            cpu.set_max_scaling_freq(new_value)
+            min_value: int = percentages[0] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
+            max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
+            cpu.set_min_max_scaling_freq((min_value, max_value))
 
     @Slot(bool)
     def _processing_update(self, processing: bool) -> None:
