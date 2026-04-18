@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def _update_master_slider_label(self) -> None:
         value = self._master_slider.slider.value()
-        self._master_slider_label.setText(f"Master value: {value}%")
+        self._master_slider_label.setText(f"Master values: {value}%")
 
     @Slot()
     def _apply_master_values(self) -> None:
