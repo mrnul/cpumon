@@ -38,7 +38,7 @@ def get_rgb_based_on_value(value: int | float, max_value: int | float) -> tuple[
     t: float = float(value) / float(max_value)
     h: float = (1. - t) * 0.333
     r, g, b = colorsys.hsv_to_rgb(h, 1., 1.)
-    return int(r * 255), int(g * 255), int(b * 255)
+    return round(r * 255), round(g * 255), round(b * 255)
 
 
 def discover_cpus() -> list[str]:

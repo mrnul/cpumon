@@ -45,10 +45,16 @@ class CPUGroupWidget(QWidget):
                 continue
 
             cpu.update_cpu_usage(
-                int(new_proc_stat[cpu.cpu_data.name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.name]))
+                round(new_proc_stat[cpu.cpu_data.name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.name]))
             )
 
         self._proc_stat = new_proc_stat
+
+    def avg_max_scaling_freq(self) -> float:
+        result: float = 0.
+        for cpu in self._cpu_widgets:
+            result += cpu.cpu_data[CPUDataEnum.SCALING_MAX_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
+        return result * 100. / len(self._cpu_widgets)
 
     def refresh_now(self) -> None:
         for cpu in self._cpu_widgets:

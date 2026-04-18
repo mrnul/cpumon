@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self._master_slider: MasterSliderWidget = MasterSliderWidget()
         self._master_slider_label: QLabel = QLabel()
         self._master_slider.slider.valueChanged.connect(self._update_master_slider_label)
-        self._master_slider.slider.setValue(50)
+        self._master_slider.slider.setValue(round(self._cpus_widget.avg_max_scaling_freq()))
 
         self._apply: QPushButton = QPushButton("Apply Master value")
         self._apply.clicked.connect(self._apply_max_scaling_freq)
@@ -58,7 +58,10 @@ class MainWindow(QMainWindow):
     def _set_processing_state(self, processing: bool) -> None:
         self._apply.setDisabled(processing)
         self._refresh.setDisabled(processing)
+        self._master_slider.setDisabled(processing)
         self._log.append("Processing started" if processing else "Processing finished")
+        if not processing:
+            self._master_slider.slider.setValue(round(self._cpus_widget.avg_max_scaling_freq()))
 
     @Slot()
     def _update_master_slider_label(self) -> None:
