@@ -1,37 +1,65 @@
-import os
-
-from utils import (
-    read_scaling_min_freq,
-    read_scaling_max_freq,
-    read_absolute_max_freq,
-    read_current_freq, read_absolute_min_freq,
-)
+from dataclasses import dataclass, field
+from enum import Enum
+import re
+from pathlib import Path
+from typing import Any, Callable
 
 
+@dataclass(frozen=True)
+class CPUAttributeSpec:
+    path: str
+    parser: Callable[[str], Any]
+    writable: bool
+
+
+class CPUDataEnum(Enum):
+    CURRENT_FREQUENCY = CPUAttributeSpec("cpufreq/scaling_cur_freq", int, True)
+    ABSOLUTE_MIN_FREQ = CPUAttributeSpec("cpufreq/cpuinfo_min_freq", int, True)
+    ABSOLUTE_MAX_FREQ = CPUAttributeSpec("cpufreq/cpuinfo_max_freq", int, True)
+    SCALING_MIN_FREQ = CPUAttributeSpec("cpufreq/scaling_min_freq", int, True)
+    SCALING_MAX_FREQ = CPUAttributeSpec("cpufreq/scaling_max_freq", int, True)
+    SCALING_AVAILABLE_GOVERNORS = CPUAttributeSpec("cpufreq/scaling_available_governors", lambda x: x.split(), False)
+    SCALING_GOVERNOR = CPUAttributeSpec("cpufreq/scaling_governor", str, True)
+
+
+@dataclass
 class CPUData:
-    def __init__(self, path: str):
-        self.path: str = path
+    path: str
+    data: dict[CPUDataEnum, Any] = field(default_factory=dict)
 
-        self.current_frequency: int = -1
+    name: str = field(init=False)
+    index: int = field(init=False)
 
-        self.min_scaling_frequency: int = -1
-        self.max_scaling_frequency: int = -1
+    _paths: dict[CPUDataEnum, Path] = field(init=False, repr=False)
 
-        self.min_absolute_frequency: int = -1
-        self.max_absolute_frequency: int = -1
+    def __post_init__(self) -> None:
+        self.name = Path(self.path).name
 
-        self.name: str = os.path.basename(self.path)
-        self.index = int(self.name.replace("cpu", ""))
+        self._paths = {
+            item: Path(self.path) / item.value.path
+            for item in CPUDataEnum
+        }
 
-    def load_current_freq(self):
-        self.current_frequency = read_current_freq(self.path)
+        match = re.match(r"cpu(\d+)$", self.name)
+        self.index = int(match.group(1)) if match else -1
 
-    def load_static_data(self):
-        self.min_scaling_frequency = read_scaling_min_freq(self.path)
-        self.max_scaling_frequency = read_scaling_max_freq(self.path)
-        self.min_absolute_frequency = read_absolute_min_freq(self.path)
-        self.max_absolute_frequency = read_absolute_max_freq(self.path)
+    def read(self, item: CPUDataEnum) -> Any:
+        raw: str = self._paths[item].read_text().strip()
+        parsed = item.value.parser(raw)
+        self.data[item] = parsed
+        return parsed
 
-    def load_all_data(self):
-        self.load_current_freq()
-        self.load_static_data()
+    def write(self, item: CPUDataEnum, value: int | str) -> None:
+        if not item.value.writable:
+            raise AttributeError(f"{item.name} is not writable")
+        self._paths[item].write_text(str(value))
+        self.data[item] = item.value.parser(str(value))
+
+    def read_all(self) -> None:
+        for item in CPUDataEnum:
+            self.read(item)
+
+    def __getitem__(self, item: CPUDataEnum) -> Any:
+        if item not in self.data:
+            return self.read(item)
+        return self.data[item]

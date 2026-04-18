@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         self._apply: QPushButton = QPushButton("Apply Master value")
         self._apply.clicked.connect(self._apply_max_scaling_freq)
 
-        self._refresh: QPushButton = QPushButton("Refresh Now")
+        self._refresh: QPushButton = QPushButton("Refresh All Now")
         self._refresh.clicked.connect(self._refresh_now)
 
         slider_layout: QHBoxLayout = QHBoxLayout()

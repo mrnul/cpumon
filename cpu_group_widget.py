@@ -1,6 +1,7 @@
 from PySide6.QtCore import Signal, Slot, QMutex, QMutexLocker
 from PySide6.QtWidgets import QWidget, QGridLayout
 
+from cpu_data import CPUDataEnum
 from proc_stat import ProcStat
 from cpu_widget import CPUWidget
 from utils import parse_proc_stat
@@ -56,7 +57,7 @@ class CPUGroupWidget(QWidget):
 
     def apply_master_value(self, percentage: int) -> None:
         for cpu in self._cpu_widgets:
-            new_value: int = percentage * cpu.cpu_data.max_absolute_frequency // 100
+            new_value: int = percentage * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
             cpu.set_max_scaling_freq(new_value)
 
     @Slot(bool)
