@@ -49,11 +49,3 @@ def discover_cpus() -> list[str]:
         for p in cpu_root.glob("cpu[0-9]*")
         if p.is_dir()
     )
-
-
-def ensure_within_range(value, min_value, max_value):
-    if value > max_value:
-        return max_value
-    if value < min_value:
-        return min_value
-    return value

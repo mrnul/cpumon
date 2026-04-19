@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 
 from cpu_data import CPUData, CPUDataEnum
 from freq_widget import FreqWidget
-from utils import get_rgb_based_on_value, ensure_within_range
+from utils import get_rgb_based_on_value
 
 
 class CPUWidget(QWidget):
@@ -51,31 +51,16 @@ class CPUWidget(QWidget):
 
     @Slot()
     def _set_min_max_scaling_frequencies_from_slider(self) -> None:
-        min_value, max_value = self._freq_widget.values()
-
         self._set_processing_state(True)
-        corrected_min: int = ensure_within_range(
-            min_value,
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MIN_FREQ],
-            self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ]
-        )
-
-        corrected_max: int = ensure_within_range(
-            max_value,
-            self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ],
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
-        )
-
-        self._freq_widget.set_min_max((corrected_min, corrected_max))
-
+        min_value, max_value = self._freq_widget.values()
         try:
-            self._cpu_data.write(CPUDataEnum.SCALING_MIN_FREQ, corrected_min)
-            self._cpu_data.write(CPUDataEnum.SCALING_MAX_FREQ, corrected_max)
+            self._cpu_data.write(CPUDataEnum.SCALING_MIN_FREQ, min_value)
+            self._cpu_data.write(CPUDataEnum.SCALING_MAX_FREQ, max_value)
             self.signal_message.emit(
-                f"Scaling frequencies {self._cpu_data.name} changed to: {corrected_min, corrected_max}")
+                f"Scaling frequencies {self._cpu_data.name} changed to: {min_value, max_value}")
         except Exception as e:
             self.signal_message.emit(
-                f"Error applying scaling frequencies {corrected_min, corrected_max}: {str(e)}"
+                f"Error applying scaling frequencies {min_value, max_value}: {str(e)}"
             )
         finally:
             self.refresh_static_data()

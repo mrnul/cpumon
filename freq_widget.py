@@ -9,7 +9,8 @@ from utils import get_rgb_based_on_value
 
 class FreqWidget(QWidget):
     DEFAULT_PROGRESSBAR_COLOR: QColor = None
-    PURPLE_COLOR: QColor = QColor(170, 0, 255)
+    LOW_FREQ_COLOR: QColor = QColor(154, 205, 50)
+    HIGH_FREQ_COLOR: QColor = QColor(192, 68, 143)
 
     def __init__(self, cpu_data: CPUData):
         super().__init__()
@@ -65,13 +66,18 @@ class FreqWidget(QWidget):
             self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
         )
         self._current_freq.setValue(frequency)
+
         palette = self._current_freq.palette()
         if frequency > self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ]:
-            self._current_freq.setFormat(f"* {frequency} *")
-            palette.setColor(QPalette.ColorRole.Highlight, self.PURPLE_COLOR)
+            self._current_freq.setFormat(f"+ {frequency} +")
+            palette.setColor(QPalette.ColorRole.Highlight, self.HIGH_FREQ_COLOR)
+        elif frequency < self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ]:
+            self._current_freq.setFormat(f"- {frequency} -")
+            palette.setColor(QPalette.ColorRole.Highlight, self.LOW_FREQ_COLOR)
         else:
             self._current_freq.setFormat("%v")
             palette.setColor(QPalette.ColorRole.Highlight, self.DEFAULT_PROGRESSBAR_COLOR)
+
         palette.setColor(QPalette.ColorRole.Text, QColor(*rgb))
         self._current_freq.setPalette(palette)
         self._current_freq.update()
@@ -93,8 +99,9 @@ class FreqWidget(QWidget):
     def _sync_spinboxes_to_slider(self) -> None:
         min_value, max_value = self._spinbox_min.value(), self._spinbox_max.value()
         if min_value > max_value:
-            min_value = max_value
+            min_value, max_value = max_value, min_value
             with QSignalBlocker(self._spinbox_min):
                 self._spinbox_min.setValue(min_value)
+                self._spinbox_max.setValue(max_value)
         with QSignalBlocker(self._slider_min_max):
             self._slider_min_max.setValue((min_value, max_value))
