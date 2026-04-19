@@ -63,7 +63,7 @@ class CPUGroupWidget(QWidget):
             cpu.refresh_static_data(True)
         self.periodic_refresh()
 
-    def apply_master_values(self, percentages: tuple[int, int]) -> None:
+    def apply_master_values(self, percentages: tuple[int, ...]) -> None:
         for cpu in self._cpu_widgets:
             min_value: int = percentages[0] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
             max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100

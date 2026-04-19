@@ -2,7 +2,7 @@ from PySide6.QtCore import QTimer, Slot
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTextBrowser, QPushButton, QLabel
 
 from cpu_group_widget import CPUGroupWidget
-from master_widget import MasterSliderWidget
+from master_slider_widget import MasterSliderWidget
 from utils import discover_cpus
 
 
@@ -25,7 +25,6 @@ class MainWindow(QMainWindow):
         self._master_slider: MasterSliderWidget = MasterSliderWidget()
         self._master_slider_label: QLabel = QLabel()
         self._master_slider.slider.valueChanged.connect(self._update_master_slider_label)
-        cur_min_value, _ = self._master_slider.slider.value()
         self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
 
         self._apply: QPushButton = QPushButton("Apply Master values")
@@ -72,7 +71,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _apply_master_values(self) -> None:
-        self._cpus_widget.apply_master_values(self._master_slider.slider.value()[:2])  # slicing to stop type warning
+        self._cpus_widget.apply_master_values(self._master_slider.slider.value())
 
     @Slot(str)
     def _handle_message(self, message: str) -> None:
