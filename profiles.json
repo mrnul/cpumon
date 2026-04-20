@@ -1,0 +1,47 @@
+[
+  {
+    "name": "default",
+    "config": [
+      {
+        "cpu": null,
+        "min_value": 0,
+        "max_value": 100
+      }
+    ]
+  },
+  {
+    "name": "RTW",
+    "config": [
+      {
+        "cpu": null,
+        "min_value": 0,
+        "max_value": 0
+      },
+      {
+        "cpu": "cpu0",
+        "min_value": 0,
+        "max_value": 50
+      }
+    ]
+  },
+  {
+    "name": "War Thunder",
+    "config": [
+      {
+        "cpu": null,
+        "min_value": 0,
+        "max_value": 35
+      }
+    ]
+  },
+  {
+    "name": "Ultra low",
+    "config": [
+      {
+        "cpu": null,
+        "min_value": 0,
+        "max_value": 0
+      }
+    ]
+  }
+]

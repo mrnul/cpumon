@@ -52,6 +52,7 @@ class FreqWidget(QWidget):
         self._spinbox_max.valueChanged.connect(self._sync_spinboxes_to_slider)
 
         self._layout: QVBoxLayout = QVBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._current_freq)
         self._layout.addWidget(self._slider_min_max)
         self._layout.addWidget(self._spinbox_min)
@@ -82,7 +83,7 @@ class FreqWidget(QWidget):
         self._current_freq.setPalette(palette)
         self._current_freq.update()
 
-    def set_min_max(self, min_max: tuple[int, int]) -> None:
+    def set_min_max(self, min_max: tuple[int, ...]) -> None:
         self._slider_min_max.setValue(min_max)
 
     def values(self) -> tuple[int, ...]:

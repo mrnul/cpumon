@@ -19,15 +19,17 @@ class CPUGroupWidget(QWidget):
         self._proc_stat: dict[str, ProcStat] = {}
 
         self._layout: QGridLayout = QGridLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
 
-        self._cpu_widgets: list[CPUWidget] = [
-            CPUWidget(cpu_path) for cpu_path in cpu_paths
-        ]
+        self._cpu_widgets = [CPUWidget(cpu_path) for cpu_path in cpu_paths]
+        self._map_cpu_widgets: dict[str, CPUWidget] = {
+            cpu.cpu_data.name: cpu
+            for cpu in self._cpu_widgets
+        }
 
         self._cpu_widgets.sort(key=lambda x: x.cpu_data.index)
 
         cpus_per_row: int = 8
-
         for index, cpu_widget in enumerate(self._cpu_widgets):
             cpu_widget.signal_message.connect(self.signal_message.emit)
             cpu_widget.signal_processing.connect(self._processing_update)
@@ -37,7 +39,7 @@ class CPUGroupWidget(QWidget):
 
         self.setLayout(self._layout)
 
-    def periodic_refresh(self):
+    def periodic_refresh(self) -> None:
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
             cpu.refresh_current_freq_and_governor()
@@ -47,7 +49,6 @@ class CPUGroupWidget(QWidget):
             cpu.update_cpu_usage(
                 round(new_proc_stat[cpu.cpu_data.name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.name]))
             )
-
         self._proc_stat = new_proc_stat
 
     def avg_min_max_scaling_freq_percentage(self) -> tuple[float, float]:
@@ -63,11 +64,13 @@ class CPUGroupWidget(QWidget):
             cpu.refresh_static_data(True)
         self.periodic_refresh()
 
-    def apply_master_values(self, percentages: tuple[int, ...]) -> None:
+    def set_all_percentages(self, percentages: tuple[int, ...]) -> None:
         for cpu in self._cpu_widgets:
-            min_value: int = percentages[0] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
-            max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
-            cpu.set_min_max_scaling_freq((min_value, max_value))
+            self.set_cpu_percentages(cpu.cpu_data.name, percentages)
+
+    def apply_all(self) -> None:
+        for cpu in self._cpu_widgets:
+            cpu.apply_min_max_scaling_freq()
 
     @Slot(bool)
     def _processing_update(self, processing: bool) -> None:
@@ -81,3 +84,19 @@ class CPUGroupWidget(QWidget):
                     self._currently_processing_count -= 1
                     if self._currently_processing_count == 0:
                         self.signal_processing.emit(False)
+
+    def set_cpu_percentages(self, cpu_name: str, percentages: tuple[int, ...]) -> None:
+        cpu: CPUWidget | None = self._map_cpu_widgets.get(cpu_name)
+        if not cpu:
+            self.signal_message.emit(f"CPU {cpu_name} not found")
+            return
+        min_value: int = percentages[0] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
+        max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
+        cpu.set_min_max_scaling_freq((min_value, max_value))
+
+    def apply_cpu(self, cpu_name: str) -> None:
+        cpu: CPUWidget | None = self._map_cpu_widgets.get(cpu_name)
+        if not cpu:
+            self.signal_message.emit(f"CPU {cpu_name} not found")
+            return
+        cpu.apply_min_max_scaling_freq()

@@ -1,10 +1,12 @@
 import colorsys
+import json
 from pathlib import Path
+from profile import Profile, CPUConfig
 
 from proc_stat import ProcStat
 
 
-def parse_proc_stat():
+def parse_proc_stat() -> dict[str, ProcStat]:
     cpu_stats = dict()
 
     path = Path("/proc/stat")
@@ -49,3 +51,20 @@ def discover_cpus() -> list[str]:
         for p in cpu_root.glob("cpu[0-9]*")
         if p.is_dir()
     )
+
+
+def parse_profiles(path: str) -> list[Profile]:
+    result: list[Profile] = []
+    try:
+        with open(path, "r") as f:
+            data: dict = json.load(f)
+        result = [
+            Profile(
+                name=item['name'],
+                config=[CPUConfig(**cfg) for cfg in item['config']]
+            )
+            for item in data
+        ]
+    except FileNotFoundError:
+        pass
+    return result

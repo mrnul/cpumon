@@ -1,8 +1,10 @@
+from sys import argv
+
 from PySide6.QtWidgets import QApplication
 
 from main_window import MainWindow
 
-app = QApplication([])
+app = QApplication(argv)
 
 main_window = MainWindow()
 main_window.show()

@@ -14,11 +14,6 @@ class CPUWidget(QWidget):
     def __init__(self, cpu_path: str):
         super().__init__()
 
-        self._refresh_timer: QTimer = QTimer()
-        self._refresh_timer.timeout.connect(self._perform_refresh)
-        self._refresh_timer.setSingleShot(True)
-        self._refresh_timer.setInterval(1000)
-
         self._cpu_data: CPUData = CPUData(cpu_path)
         self._label: QLabel = QLabel(self._cpu_data.name)
 
@@ -28,9 +23,10 @@ class CPUWidget(QWidget):
         self._label_governor.setText(self._cpu_data[CPUDataEnum.SCALING_GOVERNOR])
 
         self._apply: QPushButton = QPushButton("Apply")
-        self._apply.clicked.connect(self._set_min_max_scaling_frequencies_from_slider)
+        self._apply.clicked.connect(self.apply_min_max_scaling_freq)
 
         self._layout: QVBoxLayout = QVBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._label)
         self._layout.addWidget(self._freq_widget)
         self._layout.addWidget(self._label_governor)
@@ -50,7 +46,7 @@ class CPUWidget(QWidget):
             self.signal_message.emit(f"Error getting current frequency {self._cpu_data.name}: {str(e)}")
 
     @Slot()
-    def _set_min_max_scaling_frequencies_from_slider(self) -> None:
+    def apply_min_max_scaling_freq(self) -> None:
         self._set_processing_state(True)
         min_value, max_value = self._freq_widget.values()
         try:
@@ -65,11 +61,10 @@ class CPUWidget(QWidget):
         finally:
             self.refresh_static_data()
 
-    def set_min_max_scaling_freq(self, values: tuple[int, int]) -> None:
+    def set_min_max_scaling_freq(self, values: tuple[int, ...]) -> None:
         self._freq_widget.set_min_max(values)
-        self._set_min_max_scaling_frequencies_from_slider()
 
-    def _perform_refresh(self):
+    def _perform_refresh(self) -> None:
         try:
             self._freq_widget.set_min_max(
                 (self._cpu_data.read(CPUDataEnum.SCALING_MIN_FREQ), self._cpu_data.read(CPUDataEnum.SCALING_MAX_FREQ)))
@@ -83,8 +78,7 @@ class CPUWidget(QWidget):
         if now:
             self._perform_refresh()
         else:
-            if not self._refresh_timer.isActive():
-                self._refresh_timer.start()
+            QTimer.singleShot(1000, self._perform_refresh)
 
     def update_cpu_usage(self, usage: float | int) -> None:
         self._label.setText(f"{self._cpu_data.name}: {usage}%")

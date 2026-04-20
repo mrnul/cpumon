@@ -1,5 +1,4 @@
 import dataclasses
-from pathlib import Path
 
 
 @dataclasses.dataclass
