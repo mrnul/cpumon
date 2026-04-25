@@ -11,6 +11,7 @@ from utils import discover_cpus
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("cpumon")
 
         self._central_widget: QWidget = QWidget()
         self.setCentralWidget(self._central_widget)
