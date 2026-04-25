@@ -53,8 +53,6 @@ class MainWindow(QMainWindow):
     @Slot()
     def _profile_changed(self) -> None:
         profile: Profile = self._profiles.get_selected_profile()
-        if not profile.config:
-            self._log.append("Empty profile")
         for item in profile.config:
             if item.cpu is None:
                 self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
@@ -65,6 +63,9 @@ class MainWindow(QMainWindow):
     @Slot()
     def _apply_profile(self) -> None:
         profile: Profile = self._profiles.get_selected_profile()
+        if not profile.config:
+            self._log.append("Empty profile")
+            return
         self._profile_changed()
         for item in profile.config:
             if item.cpu is None:
