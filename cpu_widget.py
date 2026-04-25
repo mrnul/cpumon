@@ -1,23 +1,28 @@
 from PySide6.QtCore import Signal, Slot, QTimer
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QGroupBox, QProgressBar
 
 from cpu_data import CPUData, CPUDataEnum
-from freq_widget import FreqWidget
+from freq_widget import FreqGroupWidget
 from utils import get_rgb_based_on_value
 
 
-class CPUWidget(QWidget):
+class CPUGroupWidget(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
     def __init__(self, cpu_path: str):
-        super().__init__()
+        super().__init__("")
 
         self._cpu_data: CPUData = CPUData(cpu_path)
-        self._label: QLabel = QLabel(self._cpu_data.name)
+        self._utilization_bar: QProgressBar = QProgressBar()
+        self._utilization_bar.setRange(0, 100)
+        self._utilization_bar.setValue(0)
 
-        self._freq_widget: FreqWidget = FreqWidget(self._cpu_data)
+        self.setTitle(self._cpu_data.name)
+        self.setToolTip(cpu_path)
+
+        self._freq_widget: FreqGroupWidget = FreqGroupWidget(self._cpu_data)
 
         self._label_governor = QLabel()
         self._label_governor.setText(self._cpu_data[CPUDataEnum.SCALING_GOVERNOR])
@@ -27,7 +32,7 @@ class CPUWidget(QWidget):
 
         self._layout: QVBoxLayout = QVBoxLayout()
         self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.addWidget(self._label)
+        self._layout.addWidget(self._utilization_bar)
         self._layout.addWidget(self._freq_widget)
         self._layout.addWidget(self._label_governor)
         self._layout.addWidget(self._apply)
@@ -81,12 +86,12 @@ class CPUWidget(QWidget):
             QTimer.singleShot(1000, self._perform_refresh)
 
     def update_cpu_usage(self, usage: float | int) -> None:
-        self._label.setText(f"{self._cpu_data.name}: {usage}%")
+        self._utilization_bar.setValue(int(usage))
 
         rgb: tuple = get_rgb_based_on_value(usage, 100.)
-        palette = self._label.palette()
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(*rgb))
-        self._label.setPalette(palette)
+        palette = self._utilization_bar.palette()
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(*rgb))
+        self._utilization_bar.setPalette(palette)
 
     @property
     def cpu_data(self) -> CPUData:

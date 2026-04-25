@@ -1,13 +1,13 @@
 from PySide6.QtCore import Qt, Slot, Signal
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QGroupBox
 from superqt import QRangeSlider
 
 
-class MasterSliderWidget(QWidget):
+class MasterSliderGroupWidget(QGroupBox):
     signal_apply = Signal()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, title: str):
+        super().__init__(title)
 
         self._label: QLabel = QLabel()
 
@@ -15,7 +15,7 @@ class MasterSliderWidget(QWidget):
         self._slider.setRange(0, 100)
         self._slider.valueChanged.connect(self._update_slider_label)
 
-        self._apply: QPushButton = QPushButton("Apply Master values")
+        self._apply: QPushButton = QPushButton("Apply master values")
         self._apply.clicked.connect(self.signal_apply)
 
         self._slider_label_layout: QHBoxLayout = QHBoxLayout()
@@ -25,7 +25,6 @@ class MasterSliderWidget(QWidget):
         self._layout: QVBoxLayout = QVBoxLayout()
         self._layout.addLayout(self._slider_label_layout)
         self._layout.addWidget(self._apply)
-        self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
     @Slot()

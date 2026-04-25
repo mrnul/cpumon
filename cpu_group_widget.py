@@ -1,28 +1,30 @@
 from PySide6.QtCore import Signal, Slot, QMutex, QMutexLocker
-from PySide6.QtWidgets import QWidget, QGridLayout
+from PySide6.QtWidgets import QGridLayout, QGroupBox, QVBoxLayout, QPushButton
 
 from cpu_data import CPUDataEnum
+from cpu_widget import CPUGroupWidget
 from proc_stat import ProcStat
-from cpu_widget import CPUWidget
 from utils import parse_proc_stat
 
 
-class CPUGroupWidget(QWidget):
+class CPUGroupBox(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
-    def __init__(self, cpu_paths: list[str]):
-        super().__init__()
+    def __init__(self, title: str, cpu_paths: list[str]):
+        super().__init__(title)
 
         self._mutex: QMutex = QMutex()
         self._currently_processing_count: int = 0
         self._proc_stat: dict[str, ProcStat] = {}
 
-        self._layout: QGridLayout = QGridLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout: QVBoxLayout = QVBoxLayout()
+        self._cpu_widget_layout: QGridLayout = QGridLayout()
 
-        self._cpu_widgets = [CPUWidget(cpu_path) for cpu_path in cpu_paths]
-        self._map_cpu_widgets: dict[str, CPUWidget] = {
+        self._cpu_widgets = [CPUGroupWidget(cpu_path) for cpu_path in cpu_paths]
+        self._apply_all: QPushButton = QPushButton("Apply all")
+        self._apply_all.clicked.connect(self.apply_all_cpu_values)
+        self._map_cpu_widgets: dict[str, CPUGroupWidget] = {
             cpu.cpu_data.name: cpu
             for cpu in self._cpu_widgets
         }
@@ -35,8 +37,10 @@ class CPUGroupWidget(QWidget):
             cpu_widget.signal_processing.connect(self._processing_update)
 
             row, column = divmod(index, cpus_per_row)
-            self._layout.addWidget(cpu_widget, row, column)
+            self._cpu_widget_layout.addWidget(cpu_widget, row, column)
 
+        self._layout.addLayout(self._cpu_widget_layout)
+        self._layout.addWidget(self._apply_all)
         self.setLayout(self._layout)
 
     def periodic_refresh(self) -> None:
@@ -64,11 +68,11 @@ class CPUGroupWidget(QWidget):
             cpu.refresh_static_data(True)
         self.periodic_refresh()
 
-    def set_all_percentages(self, percentages: tuple[int, ...]) -> None:
+    def set_all_cpu_percentages(self, percentages: tuple[int, ...]) -> None:
         for cpu in self._cpu_widgets:
             self.set_cpu_percentages(cpu.cpu_data.name, percentages)
 
-    def apply_all(self) -> None:
+    def apply_all_cpu_values(self) -> None:
         for cpu in self._cpu_widgets:
             cpu.apply_min_max_scaling_freq()
 
@@ -78,15 +82,17 @@ class CPUGroupWidget(QWidget):
             if processing:
                 if self._currently_processing_count == 0:
                     self.signal_processing.emit(True)
+                    self._apply_all.setDisabled(True)
                 self._currently_processing_count += 1
             else:
                 if self._currently_processing_count > 0:
                     self._currently_processing_count -= 1
                     if self._currently_processing_count == 0:
                         self.signal_processing.emit(False)
+                        self._apply_all.setDisabled(False)
 
     def set_cpu_percentages(self, cpu_name: str, percentages: tuple[int, ...]) -> None:
-        cpu: CPUWidget | None = self._map_cpu_widgets.get(cpu_name)
+        cpu: CPUGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return
@@ -94,8 +100,8 @@ class CPUGroupWidget(QWidget):
         max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
         cpu.set_min_max_scaling_freq((min_value, max_value))
 
-    def apply_cpu(self, cpu_name: str) -> None:
-        cpu: CPUWidget | None = self._map_cpu_widgets.get(cpu_name)
+    def apply_cpu_freq_values(self, cpu_name: str) -> None:
+        cpu: CPUGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return

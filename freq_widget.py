@@ -7,7 +7,7 @@ from cpu_data import CPUDataEnum, CPUData
 from utils import get_rgb_based_on_value
 
 
-class FreqWidget(QWidget):
+class FreqGroupWidget(QWidget):
     DEFAULT_PROGRESSBAR_COLOR: QColor = None
     LOW_FREQ_COLOR: QColor = QColor(154, 205, 50)
     HIGH_FREQ_COLOR: QColor = QColor(192, 68, 143)

@@ -1,10 +1,10 @@
 from PySide6.QtCore import QTimer, Slot, QCoreApplication
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QTextBrowser, QPushButton
 
-from cpu_group_widget import CPUGroupWidget
-from master_slider_widget import MasterSliderWidget
+from cpu_group_widget import CPUGroupBox
+from master_slider_widget import MasterSliderGroupWidget
 from profile import Profile
-from profile_widget import ProfileWidget
+from profile_widget import ProfileGroupWidget
 from utils import discover_cpus
 
 
@@ -17,19 +17,23 @@ class MainWindow(QMainWindow):
 
         self._parent_layout: QVBoxLayout = QVBoxLayout(self._central_widget)
 
-        self._cpus_widget: CPUGroupWidget = CPUGroupWidget(discover_cpus())
+        self._cpus_widget: CPUGroupBox = CPUGroupBox("CPU Control", discover_cpus())
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
 
-        self._master_slider: MasterSliderWidget = MasterSliderWidget()
+        self._master_slider: MasterSliderGroupWidget = MasterSliderGroupWidget("Master Control")
         self._master_slider.signal_apply.connect(self._apply_master_values)
         self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
 
-        self._profiles: ProfileWidget = ProfileWidget(QCoreApplication.arguments()[1])
+        profiles_path: str = "./profiles.json"
+        if len(QCoreApplication.arguments()) > 1:
+            profiles_path = QCoreApplication.arguments()[1]
+
+        self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", profiles_path)
         self._profiles.signal_profile_changed.connect(self._profile_changed)
         self._profiles.signal_apply.connect(self._apply_profile)
 
-        self._refresh: QPushButton = QPushButton("Refresh All Now")
+        self._refresh: QPushButton = QPushButton("Refresh all Now")
         self._refresh.clicked.connect(self._refresh_now)
 
         self._log: QTextBrowser = QTextBrowser()
@@ -48,9 +52,11 @@ class MainWindow(QMainWindow):
     @Slot()
     def _profile_changed(self) -> None:
         profile: Profile = self._profiles.get_selected_profile()
+        if not profile.config:
+            self._log.append("Empty profile")
         for item in profile.config:
             if item.cpu is None:
-                self._cpus_widget.set_all_percentages((item.min_value, item.max_value))
+                self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
                 self._master_slider.slider.setValue((item.min_value, item.max_value))
             else:
                 self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
@@ -58,13 +64,12 @@ class MainWindow(QMainWindow):
     @Slot()
     def _apply_profile(self) -> None:
         profile: Profile = self._profiles.get_selected_profile()
+        self._profile_changed()
         for item in profile.config:
             if item.cpu is None:
-                self._cpus_widget.set_all_percentages((item.min_value, item.max_value))
-                self._cpus_widget.apply_all()
+                self._cpus_widget.apply_all_cpu_values()
             else:
-                self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
-                self._cpus_widget.apply_cpu(item.cpu)
+                self._cpus_widget.apply_cpu_freq_values(item.cpu)
 
     @Slot()
     def _refresh_now(self) -> None:
@@ -85,8 +90,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _apply_master_values(self) -> None:
-        self._cpus_widget.set_all_percentages(self._master_slider.slider.value())
-        self._cpus_widget.apply_all()
+        self._cpus_widget.set_all_cpu_percentages(self._master_slider.slider.value())
+        self._cpus_widget.apply_all_cpu_values()
 
     @Slot(str)
     def _handle_message(self, message: str) -> None:
