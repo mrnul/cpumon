@@ -3,11 +3,11 @@ from PySide6.QtGui import QPalette, QColor
 from PySide6.QtWidgets import QWidget, QSpinBox, QVBoxLayout, QProgressBar
 from superqt import QRangeSlider
 
-from cpu_data import CPUDataEnum, CPUData
-from utils import get_rgb_based_on_value
+from src.data.cpu_data import CPUDataEnum, CPUData
+from src.various.utils import get_rgb_based_on_value
 
 
-class FreqGroupWidget(QWidget):
+class FreqWidget(QWidget):
     DEFAULT_PROGRESSBAR_COLOR: QColor = None
     LOW_FREQ_COLOR: QColor = QColor(154, 205, 50)
     HIGH_FREQ_COLOR: QColor = QColor(192, 68, 143)

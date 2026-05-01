@@ -1,9 +1,9 @@
 import colorsys
 import json
 from pathlib import Path
-from profile import Profile, CPUConfig
+from src.data.profile import Profile, CPUConfig
 
-from proc_stat import ProcStat
+from src.data.proc_stat import ProcStat
 
 
 def parse_proc_stat() -> dict[str, ProcStat]:
@@ -46,11 +46,11 @@ def get_rgb_based_on_value(value: int | float, max_value: int | float) -> tuple[
 def discover_cpus() -> list[str]:
     cpu_root = Path("/sys/devices/system/cpu")
 
-    return sorted(
+    return [
         str(p)
         for p in cpu_root.glob("cpu[0-9]*")
         if p.is_dir()
-    )
+    ]
 
 
 def parse_profiles(path: str) -> list[Profile]:

@@ -1,8 +1,8 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QGroupBox
 
-from profile import Profile
-from utils import parse_profiles
+from src.data.profile import Profile
+from src.various.utils import parse_profiles
 
 
 class ProfileGroupWidget(QGroupBox):

@@ -1,11 +1,11 @@
 from PySide6.QtCore import QTimer, Slot, QCoreApplication
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QTextBrowser, QPushButton
 
-from cpu_group_widget import CPUGroupBox
-from master_slider_widget import MasterSliderGroupWidget
-from profile import Profile
-from profile_widget import ProfileGroupWidget
-from utils import discover_cpus
+from src.widgets.cpu_group_control_widget import CPUGroupControlWidget
+from src.widgets.master_slider_group_widget import MasterSliderGroupWidget
+from src.data.profile import Profile
+from src.widgets.profile_group_widget import ProfileGroupWidget
+from src.various.utils import discover_cpus
 
 
 class MainWindow(QMainWindow):
@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
 
         self._parent_layout: QVBoxLayout = QVBoxLayout(self._central_widget)
 
-        self._cpus_widget: CPUGroupBox = CPUGroupBox("CPU Control", discover_cpus())
+        self._cpus_widget: CPUGroupControlWidget = CPUGroupControlWidget("CPU Control", discover_cpus())
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
 

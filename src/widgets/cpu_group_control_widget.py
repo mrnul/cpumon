@@ -1,13 +1,13 @@
 from PySide6.QtCore import Signal, Slot, QMutex, QMutexLocker
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QVBoxLayout, QPushButton
 
-from cpu_data import CPUDataEnum
-from cpu_widget import CPUGroupWidget
-from proc_stat import ProcStat
-from utils import parse_proc_stat
+from src.data.cpu_data import CPUDataEnum
+from src.data.proc_stat import ProcStat
+from src.various.utils import parse_proc_stat
+from src.widgets.single_cpu_control_group_widget import SingleCPUControlGroupWidget
 
 
-class CPUGroupBox(QGroupBox):
+class CPUGroupControlWidget(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
@@ -21,10 +21,10 @@ class CPUGroupBox(QGroupBox):
         self._layout: QVBoxLayout = QVBoxLayout()
         self._cpu_widget_layout: QGridLayout = QGridLayout()
 
-        self._cpu_widgets = [CPUGroupWidget(cpu_path) for cpu_path in cpu_paths]
+        self._cpu_widgets = [SingleCPUControlGroupWidget(cpu_path) for cpu_path in cpu_paths]
         self._apply_all: QPushButton = QPushButton("Apply all")
         self._apply_all.clicked.connect(self.apply_all_cpu_values)
-        self._map_cpu_widgets: dict[str, CPUGroupWidget] = {
+        self._map_cpu_widgets: dict[str, SingleCPUControlGroupWidget] = {
             cpu.cpu_data.name: cpu
             for cpu in self._cpu_widgets
         }
@@ -92,7 +92,7 @@ class CPUGroupBox(QGroupBox):
                         self._apply_all.setDisabled(False)
 
     def set_cpu_percentages(self, cpu_name: str, percentages: tuple[int, ...]) -> None:
-        cpu: CPUGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
+        cpu: SingleCPUControlGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return
@@ -101,7 +101,7 @@ class CPUGroupBox(QGroupBox):
         cpu.set_min_max_scaling_freq((min_value, max_value))
 
     def apply_cpu_freq_values(self, cpu_name: str) -> None:
-        cpu: CPUGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
+        cpu: SingleCPUControlGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return

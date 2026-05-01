@@ -2,12 +2,12 @@ from PySide6.QtCore import Signal, Slot, QTimer
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QGroupBox, QProgressBar
 
-from cpu_data import CPUData, CPUDataEnum
-from freq_widget import FreqGroupWidget
-from utils import get_rgb_based_on_value
+from src.data.cpu_data import CPUData, CPUDataEnum
+from src.widgets.freq_widget import FreqWidget
+from src.various.utils import get_rgb_based_on_value
 
 
-class CPUGroupWidget(QGroupBox):
+class SingleCPUControlGroupWidget(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
@@ -22,7 +22,7 @@ class CPUGroupWidget(QGroupBox):
         self.setTitle(self._cpu_data.name)
         self.setToolTip(cpu_path)
 
-        self._freq_widget: FreqGroupWidget = FreqGroupWidget(self._cpu_data)
+        self._freq_widget: FreqWidget = FreqWidget(self._cpu_data)
 
         self._label_governor = QLabel()
         self._label_governor.setText(self._cpu_data[CPUDataEnum.SCALING_GOVERNOR])
