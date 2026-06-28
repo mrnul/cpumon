@@ -1,6 +1,7 @@
 import colorsys
 import json
 from pathlib import Path
+
 from src.data.profile import Profile, CPUConfig
 
 from src.data.proc_stat import ProcStat
@@ -43,13 +44,27 @@ def get_rgb_based_on_value(value: int | float, max_value: int | float) -> tuple[
     return round(r * 255), round(g * 255), round(b * 255)
 
 
-def discover_cpus() -> list[str]:
-    cpu_root = Path("/sys/devices/system/cpu")
-
+def discover_dirs(root_item: str, pattern: str) -> list[Path]:
+    root_path = Path(root_item)
     return [
-        str(p)
-        for p in cpu_root.glob("cpu[0-9]*")
+        p
+        for p in root_path.glob(pattern)
         if p.is_dir()
+    ]
+
+
+def discover_cpu_dirs() -> list[Path]:
+    return discover_dirs("/sys/devices/system/cpu", "cpu[0-9]*")
+
+
+def discover_hwmon_dirs() -> list[Path]:
+    return discover_dirs("/sys/class/hwmon", "hwmon[0-9]*")
+
+
+def discover_temperature_bases() -> list[str]:
+    return [
+        str(item).removesuffix("_input") for hwmon in discover_hwmon_dirs() for item in hwmon.iterdir()
+        if item.name.startswith("temp") and item.name.endswith("input")
     ]
 
 

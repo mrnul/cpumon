@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from PySide6.QtCore import Signal, Slot, QMutex, QMutexLocker
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QVBoxLayout, QPushButton
 
@@ -11,7 +13,7 @@ class CPUGroupControlWidget(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
-    def __init__(self, title: str, cpu_paths: list[str]):
+    def __init__(self, title: str, cpu_paths: list[Path]):
         super().__init__(title)
 
         self._mutex: QMutex = QMutex()

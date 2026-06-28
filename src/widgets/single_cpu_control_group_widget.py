@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from PySide6.QtCore import Signal, Slot, QTimer
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QGroupBox, QProgressBar
@@ -11,7 +13,7 @@ class SingleCPUControlGroupWidget(QGroupBox):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
-    def __init__(self, cpu_path: str):
+    def __init__(self, cpu_path: Path):
         super().__init__("")
 
         self._cpu_data: CPUData = CPUData(cpu_path)
@@ -20,7 +22,7 @@ class SingleCPUControlGroupWidget(QGroupBox):
         self._utilization_bar.setValue(0)
 
         self.setTitle(self._cpu_data.name)
-        self.setToolTip(cpu_path)
+        self.setToolTip(str(cpu_path))
 
         self._freq_widget: FreqWidget = FreqWidget(self._cpu_data)
 

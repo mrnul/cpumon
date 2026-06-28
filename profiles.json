@@ -20,7 +20,7 @@
       {
         "cpu": "cpu0",
         "min_value": 0,
-        "max_value": 50
+        "max_value": 70
       }
     ]
   },
@@ -30,7 +30,7 @@
       {
         "cpu": null,
         "min_value": 0,
-        "max_value": 35
+        "max_value": 30
       }
     ]
   },

@@ -24,7 +24,7 @@ class CPUDataEnum(Enum):
 
 @dataclass
 class CPUData:
-    path: str
+    path: Path
     data: dict[CPUDataEnum, Any] = field(default_factory=dict)
 
     name: str = field(init=False)
@@ -33,10 +33,10 @@ class CPUData:
     _paths: dict[CPUDataEnum, Path] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.name = Path(self.path).name
+        self.name = self.path.name
 
         self._paths = {
-            item: Path(self.path) / item.value.path
+            item: self.path / item.value.path
             for item in CPUDataEnum
         }
 
@@ -55,7 +55,7 @@ class CPUData:
         self._paths[item].write_text(str(value))
         self.data[item] = item.value.parser(str(value))
 
-    def read_all(self) -> None:
+    def refresh(self) -> None:
         for item in CPUDataEnum:
             self.read(item)
 
