@@ -1,10 +1,23 @@
 import colorsys
 import json
+from contextlib import contextmanager
 from pathlib import Path
 
-from src.data.profile import Profile, CPUConfig
+from PySide6.QtWidgets import QWidget
 
 from src.data.proc_stat import ProcStat
+from src.data.profile import Profile, CPUConfig
+
+
+@contextmanager
+def ui_update(widget: QWidget):
+    updates_enabled: bool = widget.updatesEnabled()
+    widget.setUpdatesEnabled(False)
+    try:
+        yield
+    finally:
+        widget.setUpdatesEnabled(updates_enabled)
+        widget.update()
 
 
 def parse_proc_stat() -> dict[str, ProcStat]:

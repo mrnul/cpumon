@@ -33,12 +33,12 @@ class CPUGroupControlWidget(QGroupBox):
 
         self._cpu_widgets.sort(key=lambda x: x.cpu_data.index)
 
-        cpus_per_row: int = 8
+        per_row: int = 8
         for index, cpu_widget in enumerate(self._cpu_widgets):
             cpu_widget.signal_message.connect(self.signal_message.emit)
             cpu_widget.signal_processing.connect(self._processing_update)
 
-            row, column = divmod(index, cpus_per_row)
+            row, column = divmod(index, per_row)
             self._cpu_widget_layout.addWidget(cpu_widget, row, column)
 
         self._layout.addLayout(self._cpu_widget_layout)

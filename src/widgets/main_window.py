@@ -8,6 +8,7 @@ from src.widgets.profile_group_widget import ProfileGroupWidget
 from src.various.utils import discover_cpu_dirs
 from src.various.utils import discover_temperature_bases
 from src.widgets.temperature_group_widget import TemperatureGroupWidget
+from src.various.utils import ui_update
 
 
 class MainWindow(QMainWindow):
@@ -56,54 +57,60 @@ class MainWindow(QMainWindow):
         self._timer.start(1000)
 
     def _periodic_refresh(self):
-        self._cpus_widget.periodic_refresh()
-        self._temperatures_widget.refresh()
+        with ui_update(self._central_widget):
+            self._cpus_widget.periodic_refresh()
+            self._temperatures_widget.refresh()
 
     @Slot()
     def _profile_changed(self) -> None:
-        profile: Profile = self._profiles.get_selected_profile()
-        for item in profile.config:
-            if item.cpu is None:
-                self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
-                self._master_slider.slider.setValue((item.min_value, item.max_value))
-            else:
-                self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
+        with ui_update(self._central_widget):
+            profile: Profile = self._profiles.get_selected_profile()
+            for item in profile.config:
+                if item.cpu is None:
+                    self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
+                    self._master_slider.slider.setValue((item.min_value, item.max_value))
+                else:
+                    self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
 
     @Slot()
     def _apply_profile(self) -> None:
-        profile: Profile = self._profiles.get_selected_profile()
-        if not profile.config:
-            self._log.append("Empty profile")
-            return
-        self._profile_changed()
-        for item in profile.config:
-            if item.cpu is None:
-                self._cpus_widget.apply_all_cpu_values()
-            else:
-                self._cpus_widget.apply_cpu_freq_values(item.cpu)
+        with ui_update(self._central_widget):
+            profile: Profile = self._profiles.get_selected_profile()
+            if not profile.config:
+                self._log.append("Empty profile")
+                return
+            self._profile_changed()
+            for item in profile.config:
+                if item.cpu is None:
+                    self._cpus_widget.apply_all_cpu_values()
+                else:
+                    self._cpus_widget.apply_cpu_freq_values(item.cpu)
 
     @Slot()
     def _refresh_now(self) -> None:
-        self._cpus_widget.refresh_now()
-        self._temperatures_widget.refresh()
-        self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
-        self._profiles.set_no_selection()
-        self._log.append("Data refreshed")
+        with ui_update(self._central_widget):
+            self._cpus_widget.refresh_now()
+            self._temperatures_widget.refresh()
+            self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
+            self._profiles.set_no_selection()
+            self._log.append("Data refreshed")
 
     @Slot(bool)
     def _set_processing_state(self, processing: bool) -> None:
-        self._master_slider.setDisabled(processing)
-        self._refresh.setDisabled(processing)
-        self._master_slider.setDisabled(processing)
-        self._profiles.setDisabled(processing)
-        if not processing:
-            self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
-        self._log.append("Processing started" if processing else "Processing finished")
+        with ui_update(self._central_widget):
+            self._master_slider.setDisabled(processing)
+            self._refresh.setDisabled(processing)
+            self._master_slider.setDisabled(processing)
+            self._profiles.setDisabled(processing)
+            if not processing:
+                self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
+            self._log.append("Processing started" if processing else "Processing finished")
 
     @Slot()
     def _apply_master_values(self) -> None:
-        self._cpus_widget.set_all_cpu_percentages(self._master_slider.slider.value())
-        self._cpus_widget.apply_all_cpu_values()
+        with ui_update(self._central_widget):
+            self._cpus_widget.set_all_cpu_percentages(self._master_slider.slider.value())
+            self._cpus_widget.apply_all_cpu_values()
 
     @Slot(str)
     def _handle_message(self, message: str) -> None:
