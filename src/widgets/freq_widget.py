@@ -8,7 +8,7 @@ from src.various.utils import get_rgb_based_on_value
 
 
 class FreqWidget(QWidget):
-    DEFAULT_PROGRESSBAR_COLOR: QColor = None
+    DEFAULT_PROGRESSBAR_COLOR: QColor | None = None
     LOW_FREQ_COLOR: QColor = QColor(154, 205, 50)
     HIGH_FREQ_COLOR: QColor = QColor(192, 68, 143)
 
@@ -61,23 +61,24 @@ class FreqWidget(QWidget):
 
     def update_current_freq(self) -> None:
         frequency: int = self._cpu_data.read(CPUDataEnum.CURRENT_FREQUENCY)
-
         rgb: tuple = get_rgb_based_on_value(
             frequency,
             self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
         )
-        self._current_freq.setValue(frequency)
 
         palette = self._current_freq.palette()
         if frequency > self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ]:
             self._current_freq.setFormat(f"+ {frequency} +")
             palette.setColor(QPalette.ColorRole.Highlight, self.HIGH_FREQ_COLOR)
+            self._current_freq.setValue(self._current_freq.maximum())
         elif frequency < self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ]:
             self._current_freq.setFormat(f"- {frequency} -")
             palette.setColor(QPalette.ColorRole.Highlight, self.LOW_FREQ_COLOR)
+            self._current_freq.setValue(self._current_freq.minimum())
         else:
             self._current_freq.setFormat("%v")
             palette.setColor(QPalette.ColorRole.Highlight, self.DEFAULT_PROGRESSBAR_COLOR)
+            self._current_freq.setValue(frequency)
 
         palette.setColor(QPalette.ColorRole.Text, QColor(*rgb))
         self._current_freq.setPalette(palette)
