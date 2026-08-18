@@ -61,28 +61,28 @@ class FreqWidget(QWidget):
 
     def update_current_freq(self) -> None:
         frequency: int = self._cpu_data.read(CPUDataEnum.CURRENT_FREQUENCY)
-        rgb: tuple = get_rgb_based_on_value(
-            frequency,
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
-        )
-
         palette = self._current_freq.palette()
         if frequency > self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ]:
             self._current_freq.setFormat(f"+ {frequency} +")
             palette.setColor(QPalette.ColorRole.Highlight, self.HIGH_FREQ_COLOR)
-            self._current_freq.setValue(self._current_freq.maximum())
+            if frequency > self._current_freq.maximum():
+                frequency = self._current_freq.maximum()
         elif frequency < self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ]:
             self._current_freq.setFormat(f"- {frequency} -")
             palette.setColor(QPalette.ColorRole.Highlight, self.LOW_FREQ_COLOR)
-            self._current_freq.setValue(self._current_freq.minimum())
+            if frequency < self._current_freq.minimum():
+                frequency = self._current_freq.minimum()
         else:
             self._current_freq.setFormat("%v")
             palette.setColor(QPalette.ColorRole.Highlight, self.DEFAULT_PROGRESSBAR_COLOR)
-            self._current_freq.setValue(frequency)
 
+        rgb: tuple = get_rgb_based_on_value(
+            frequency,
+            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
+        )
         palette.setColor(QPalette.ColorRole.Text, QColor(*rgb))
+        self._current_freq.setValue(frequency)
         self._current_freq.setPalette(palette)
-        self._current_freq.update()
 
     def set_min_max(self, min_max: tuple[int, ...]) -> None:
         self._slider_min_max.setValue(min_max)

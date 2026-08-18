@@ -5,9 +5,9 @@ from src.widgets.cpu_group_control_widget import CPUGroupControlWidget
 from src.widgets.master_slider_group_widget import MasterSliderGroupWidget
 from src.data.profile import Profile
 from src.widgets.profile_group_widget import ProfileGroupWidget
-from src.various.utils import discover_cpu_dirs
+from src.various.utils import discover_cpu_dirs, discover_fan_bases
 from src.various.utils import discover_temperature_bases
-from src.widgets.temperature_group_widget import TemperatureGroupWidget
+from src.widgets.temperature_fan_group_widget import TemperatureFanGroupWidget
 from src.various.utils import ui_update
 
 
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
 
-        self._temperatures_widget: TemperatureGroupWidget = TemperatureGroupWidget("Temperatures", discover_temperature_bases())
+        self._temperatures_and_fans_widget: TemperatureFanGroupWidget = TemperatureFanGroupWidget("Temperatures and Fans", discover_temperature_bases(), discover_fan_bases())
 
         self._master_slider: MasterSliderGroupWidget = MasterSliderGroupWidget("Master Control")
         self._master_slider.signal_apply.connect(self._apply_master_values)
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self._log: QTextBrowser = QTextBrowser()
         self._log.document().setMaximumBlockCount(1000)
 
-        self._parent_layout.addWidget(self._temperatures_widget)
+        self._parent_layout.addWidget(self._temperatures_and_fans_widget)
         self._parent_layout.addWidget(self._cpus_widget)
         self._parent_layout.addWidget(self._master_slider)
         self._parent_layout.addWidget(self._profiles)
@@ -59,7 +59,7 @@ class MainWindow(QMainWindow):
     def _periodic_refresh(self):
         with ui_update(self._central_widget):
             self._cpus_widget.periodic_refresh()
-            self._temperatures_widget.refresh()
+            self._temperatures_and_fans_widget.refresh()
 
     @Slot()
     def _profile_changed(self) -> None:
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
     def _refresh_now(self) -> None:
         with ui_update(self._central_widget):
             self._cpus_widget.refresh_now()
-            self._temperatures_widget.refresh()
+            self._temperatures_and_fans_widget.refresh()
             self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
             self._profiles.set_no_selection()
             self._log.append("Data refreshed")

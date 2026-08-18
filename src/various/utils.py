@@ -80,6 +80,12 @@ def discover_temperature_bases() -> list[str]:
         if item.name.startswith("temp") and item.name.endswith("input")
     ]
 
+def discover_fan_bases() -> list[str]:
+    return [
+        str(item).removesuffix("_input") for hwmon in discover_hwmon_dirs() for item in hwmon.iterdir()
+        if item.name.startswith("fan") and item.name.endswith("input")
+    ]
+
 
 def parse_profiles(path: str) -> list[Profile]:
     result: list[Profile] = []
