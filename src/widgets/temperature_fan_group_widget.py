@@ -27,9 +27,9 @@ class TemperatureFanGroupWidget(QGroupBox):
             fan_layout.addWidget(fan_widget, row, column)
 
         layout.addLayout(temp_layout)
-        layout.addWidget(QFrame(frameShape=QFrame.Shape.HLine))  # separator
-        layout.addLayout(fan_layout)
-        layout.setContentsMargins(0, 0, 0, 0)
+        if self._fan_widgets:
+            layout.addWidget(QFrame(frameShape=QFrame.Shape.HLine))  # separator
+            layout.addLayout(fan_layout)
         self.setLayout(layout)
 
     def refresh(self):
