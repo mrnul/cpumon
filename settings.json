@@ -1,0 +1,45 @@
+{
+  "monitor": 1,
+  "profiles": [
+    {
+      "name": "default",
+      "config": [
+        {
+          "cpu": null,
+          "min_value": 0,
+          "max_value": 100
+        }
+      ]
+    },
+    {
+      "name": "RTW",
+      "config": [
+        {
+          "cpu": null,
+          "min_value": 0,
+          "max_value": 45
+        }
+      ]
+    },
+    {
+      "name": "War Thunder",
+      "config": [
+        {
+          "cpu": null,
+          "min_value": 0,
+          "max_value": 30
+        }
+      ]
+    },
+    {
+      "name": "Ultra low",
+      "config": [
+        {
+          "cpu": null,
+          "min_value": 0,
+          "max_value": 0
+        }
+      ]
+    }
+  ]
+}

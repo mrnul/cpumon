@@ -7,6 +7,7 @@ from src.data.cpu_data import CPUDataEnum
 from src.data.proc_stat import ProcStat
 from src.various.utils import parse_proc_stat
 from src.widgets.single_cpu_control_group_widget import SingleCPUControlGroupWidget
+from src.various.utils import populate_grid_layout
 
 
 class CPUGroupControlWidget(QGroupBox):
@@ -33,13 +34,11 @@ class CPUGroupControlWidget(QGroupBox):
 
         self._cpu_widgets.sort(key=lambda x: x.cpu_data.index)
 
-        per_row: int = 8
-        for index, cpu_widget in enumerate(self._cpu_widgets):
+        for cpu_widget in self._cpu_widgets:
             cpu_widget.signal_message.connect(self.signal_message.emit)
             cpu_widget.signal_processing.connect(self._processing_update)
 
-            row, column = divmod(index, per_row)
-            self._cpu_widget_layout.addWidget(cpu_widget, row, column)
+        populate_grid_layout(self._cpu_widget_layout, self._cpu_widgets)
 
         self._layout.addLayout(self._cpu_widget_layout)
         self._layout.addWidget(self._apply_all)

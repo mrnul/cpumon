@@ -1,14 +1,16 @@
 from PySide6.QtCore import QTimer, Slot, QCoreApplication
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QTextBrowser, QPushButton
 
-from src.widgets.cpu_group_control_widget import CPUGroupControlWidget
-from src.widgets.master_slider_group_widget import MasterSliderGroupWidget
-from src.data.profile import Profile
-from src.widgets.profile_group_widget import ProfileGroupWidget
+from src.data.settings import Settings
+from src.data.settings import Profile
 from src.various.utils import discover_cpu_dirs, discover_fan_bases
 from src.various.utils import discover_temperature_bases
-from src.widgets.temperature_fan_group_widget import TemperatureFanGroupWidget
 from src.various.utils import ui_update
+from src.widgets.cpu_group_control_widget import CPUGroupControlWidget
+from src.widgets.master_slider_group_widget import MasterSliderGroupWidget
+from src.widgets.profile_group_widget import ProfileGroupWidget
+from src.widgets.temperature_fan_group_widget import TemperatureFanGroupWidget
 
 
 class MainWindow(QMainWindow):
@@ -21,21 +23,33 @@ class MainWindow(QMainWindow):
 
         self._parent_layout: QVBoxLayout = QVBoxLayout(self._central_widget)
 
+        self._temperatures_and_fans_widget: TemperatureFanGroupWidget = TemperatureFanGroupWidget("Temperatures and Fans", discover_temperature_bases(), discover_fan_bases())
+
         self._cpus_widget: CPUGroupControlWidget = CPUGroupControlWidget("CPU Control", discover_cpu_dirs())
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
-
-        self._temperatures_and_fans_widget: TemperatureFanGroupWidget = TemperatureFanGroupWidget("Temperatures and Fans", discover_temperature_bases(), discover_fan_bases())
 
         self._master_slider: MasterSliderGroupWidget = MasterSliderGroupWidget("Master Control")
         self._master_slider.signal_apply.connect(self._apply_master_values)
         self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
 
-        profiles_path: str = "./profiles.json"
+        settings_path: str = "./settings.json"
         if len(QCoreApplication.arguments()) > 1:
-            profiles_path = QCoreApplication.arguments()[1]
+            settings_path = QCoreApplication.arguments()[1]
+        self._settings: Settings = Settings.from_file(settings_path)
 
-        self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", profiles_path)
+        try:
+            screen = QGuiApplication.screens()[self._settings.monitor]
+            geometry = screen.availableGeometry()
+
+            middle_x = geometry.x() + (geometry.width() - self.width()) // 2
+            middle_y = geometry.y() + (geometry.height() - self.height()) // 2
+
+            self.move(middle_x, middle_y)
+        except (TypeError, IndexError) as e:
+            pass
+
+        self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", self._settings.profiles)
         self._profiles.signal_profile_changed.connect(self._profile_changed)
         self._profiles.signal_apply.connect(self._apply_profile)
 

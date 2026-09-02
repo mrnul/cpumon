@@ -4,6 +4,7 @@ from src.data.fan_data import FanData
 from src.data.temperature_data import TemperatureData
 from src.widgets.temperature_widget import TemperatureWidget
 from src.widgets.fan_widget import FanWidget
+from src.various.utils import populate_grid_layout
 
 
 class TemperatureFanGroupWidget(QGroupBox):
@@ -17,17 +18,11 @@ class TemperatureFanGroupWidget(QGroupBox):
         temp_layout: QGridLayout = QGridLayout()
         fan_layout: QGridLayout = QGridLayout()
 
-        per_row: int = 8
-        for index, temp_widget in enumerate(self._temp_widgets):
-            row, column = divmod(index, per_row)
-            temp_layout.addWidget(temp_widget, row, column)
-
-        for index, fan_widget in enumerate(self._fan_widgets):
-            row, column = divmod(index, per_row)
-            fan_layout.addWidget(fan_widget, row, column)
-
+        populate_grid_layout(temp_layout, self._temp_widgets)
         layout.addLayout(temp_layout)
+
         if self._fan_widgets:
+            populate_grid_layout(fan_layout, self._fan_widgets)
             layout.addWidget(QFrame(frameShape=QFrame.Shape.HLine))  # separator
             layout.addLayout(fan_layout)
         self.setLayout(layout)

@@ -3,10 +3,10 @@ import json
 from contextlib import contextmanager
 from pathlib import Path
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QGridLayout
 
 from src.data.proc_stat import ProcStat
-from src.data.profile import Profile, CPUConfig
+from src.data.settings import Profile, CPUConfig, Settings
 
 
 @contextmanager
@@ -87,18 +87,7 @@ def discover_fan_bases() -> list[str]:
     ]
 
 
-def parse_profiles(path: str) -> list[Profile]:
-    result: list[Profile] = []
-    try:
-        with open(path, "r") as f:
-            data: dict = json.load(f)
-        result = [
-            Profile(
-                name=item['name'],
-                config=[CPUConfig(**cfg) for cfg in item['config']]
-            )
-            for item in data
-        ]
-    except FileNotFoundError:
-        pass
-    return result
+def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], per_row: int = 8) -> None:
+    for index, widget in enumerate(widgets):
+        row, column = divmod(index, per_row)
+        layout.addWidget(widget, row, column)

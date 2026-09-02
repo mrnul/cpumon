@@ -1,8 +1,7 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QGroupBox
 
-from src.data.profile import Profile
-from src.various.utils import parse_profiles
+from src.data.settings import Profile
 
 
 class ProfileGroupWidget(QGroupBox):
@@ -11,10 +10,10 @@ class ProfileGroupWidget(QGroupBox):
 
     DEFAULT_PROFILE: Profile = Profile(name="No selection", config=[])
 
-    def __init__(self, title: str, profiles_path: str):
+    def __init__(self, title: str, profiles: list[Profile]):
         super().__init__(title)
 
-        self._profiles: list[Profile] = [self.DEFAULT_PROFILE] + parse_profiles(profiles_path)
+        self._profiles: list[Profile] = profiles
 
         self._combobox: QComboBox = QComboBox()
         self._combobox.addItems([profile.name for profile in self._profiles])
