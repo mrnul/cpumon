@@ -38,17 +38,6 @@ class MainWindow(QMainWindow):
             settings_path = QCoreApplication.arguments()[1]
         self._settings: Settings = Settings.from_file(settings_path)
 
-        try:
-            screen = QGuiApplication.screens()[self._settings.monitor]
-            geometry = screen.availableGeometry()
-
-            middle_x = geometry.x() + (geometry.width() - self.width()) // 2
-            middle_y = geometry.y() + (geometry.height() - self.height()) // 2
-
-            self.move(middle_x, middle_y)
-        except (TypeError, IndexError) as e:
-            pass
-
         self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", self._settings.profiles)
         self._profiles.signal_profile_changed.connect(self._profile_changed)
         self._profiles.signal_apply.connect(self._apply_profile)
@@ -65,6 +54,18 @@ class MainWindow(QMainWindow):
         self._parent_layout.addWidget(self._profiles)
         self._parent_layout.addWidget(self._refresh)
         self._parent_layout.addWidget(self._log)
+
+        try:
+            self.adjustSize()
+            screen = QGuiApplication.screens()[self._settings.monitor]
+            geometry = screen.availableGeometry()
+
+            middle_x = geometry.x() + (geometry.width() - self.width()) // 2
+            middle_y = geometry.y() + (geometry.height() - self.height()) // 2
+
+            self.move(middle_x, middle_y)
+        except (TypeError, IndexError) as e:
+            pass
 
         self._timer: QTimer = QTimer(self)
         self._timer.timeout.connect(self._periodic_refresh)

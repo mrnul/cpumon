@@ -1,12 +1,10 @@
 import colorsys
-import json
 from contextlib import contextmanager
 from pathlib import Path
 
 from PySide6.QtWidgets import QWidget, QGridLayout
 
 from src.data.proc_stat import ProcStat
-from src.data.settings import Profile, CPUConfig, Settings
 
 
 @contextmanager
