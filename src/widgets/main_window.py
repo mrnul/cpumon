@@ -39,8 +39,7 @@ class MainWindow(QMainWindow):
         self._settings: Settings = Settings.from_file(settings_path)
 
         self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", self._settings.profiles)
-        self._profiles.signal_profile_changed.connect(self._profile_changed)
-        self._profiles.signal_apply.connect(self._apply_profile)
+        self._profiles.signal_profile_clicked.connect(self._apply_profile)
 
         self._refresh: QPushButton = QPushButton("Refresh all Now")
         self._refresh.clicked.connect(self._refresh_now)
@@ -65,6 +64,7 @@ class MainWindow(QMainWindow):
 
             self.move(middle_x, middle_y)
         except (TypeError, IndexError) as e:
+            self._log.append(str(e))
             pass
 
         self._timer: QTimer = QTimer(self)
@@ -76,29 +76,16 @@ class MainWindow(QMainWindow):
             self._cpus_widget.periodic_refresh()
             self._temperatures_and_fans_widget.refresh()
 
-    @Slot()
-    def _profile_changed(self) -> None:
+    @Slot(Profile)
+    def _apply_profile(self, profile: Profile) -> None:
         with ui_update(self._central_widget):
-            profile: Profile = self._profiles.get_selected_profile()
             for item in profile.config:
                 if item.cpu is None:
-                    self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
-                    self._master_slider.slider.setValue((item.min_value, item.max_value))
-                else:
-                    self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
-
-    @Slot()
-    def _apply_profile(self) -> None:
-        with ui_update(self._central_widget):
-            profile: Profile = self._profiles.get_selected_profile()
-            if not profile.config:
-                self._log.append("Empty profile")
-                return
-            self._profile_changed()
-            for item in profile.config:
-                if item.cpu is None:
+                    self._master_slider.slider.setValue((item.min_value,  item.max_value))
+                    self._cpus_widget.set_all_cpu_percentages((item.min_value,  item.max_value))
                     self._cpus_widget.apply_all_cpu_values()
                 else:
+                    self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
                     self._cpus_widget.apply_cpu_freq_values(item.cpu)
 
     @Slot()
@@ -107,7 +94,6 @@ class MainWindow(QMainWindow):
             self._cpus_widget.refresh_now()
             self._temperatures_and_fans_widget.refresh()
             self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
-            self._profiles.set_no_selection()
             self._log.append("Data refreshed")
 
     @Slot(bool)

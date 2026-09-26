@@ -2,7 +2,7 @@
   "monitor": 1,
   "profiles": [
     {
-      "name": "default",
+      "name": "Full range",
       "config": [
         {
           "cpu": null,
