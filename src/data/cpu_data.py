@@ -20,6 +20,7 @@ class CPUDataEnum(Enum):
     SCALING_MAX_FREQ = CPUAttributeSpec("cpufreq/scaling_max_freq", int, True)
     SCALING_AVAILABLE_GOVERNORS = CPUAttributeSpec("cpufreq/scaling_available_governors", lambda x: x.split(), False)
     SCALING_GOVERNOR = CPUAttributeSpec("cpufreq/scaling_governor", str, True)
+    ONLINE = CPUAttributeSpec("online", int, True)
 
 
 @dataclass
@@ -43,9 +44,12 @@ class CPUData:
         match = re.match(r"cpu(\d+)$", self.name)
         self.index = int(match.group(1)) if match else -1
 
-    def read(self, item: CPUDataEnum) -> Any:
-        raw: str = self._paths[item].read_text().strip()
-        parsed = item.value.parser(raw)
+    def read(self, item: CPUDataEnum, default: Any = None) -> Any:
+        try:
+            raw: str = self._paths[item].read_text().strip()
+            parsed = item.value.parser(raw)
+        except (Exception,):
+            parsed = default
         self.data[item] = parsed
         return parsed
 
@@ -55,7 +59,7 @@ class CPUData:
         self._paths[item].write_text(str(value))
         self.data[item] = item.value.parser(str(value))
 
-    def refresh(self) -> None:
+    def refresh_all(self) -> None:
         for item in CPUDataEnum:
             self.read(item)
 

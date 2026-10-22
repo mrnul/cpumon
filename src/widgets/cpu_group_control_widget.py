@@ -47,11 +47,11 @@ class CPUGroupControlWidget(QGroupBox):
     def periodic_refresh(self) -> None:
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
-            cpu.refresh_current_freq_and_governor()
+            cpu.periodic_refresh()
             if cpu.cpu_data.name not in self._proc_stat:
                 continue
 
-            cpu.update_cpu_usage(
+            cpu.set_cpu_usage(
                 round(new_proc_stat[cpu.cpu_data.name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.name]))
             )
         self._proc_stat = new_proc_stat
@@ -59,14 +59,19 @@ class CPUGroupControlWidget(QGroupBox):
     def avg_min_max_scaling_freq_percentage(self) -> tuple[float, float]:
         avg_min: float = 0.
         avg_max: float = 0.
+        count: int = 0
         for cpu in self._cpu_widgets:
-            avg_min += cpu.cpu_data[CPUDataEnum.SCALING_MIN_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
-            avg_max += cpu.cpu_data[CPUDataEnum.SCALING_MAX_FREQ] / cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ]
-        return avg_min * 100. / len(self._cpu_widgets), avg_max * 100. / len(self._cpu_widgets)
+            abs_max_freq: int = cpu.cpu_data.read(CPUDataEnum.ABSOLUTE_MAX_FREQ, 0)
+            if not abs_max_freq:
+                continue
+            count += 1
+            avg_min += cpu.cpu_data[CPUDataEnum.SCALING_MIN_FREQ] / abs_max_freq
+            avg_max += cpu.cpu_data[CPUDataEnum.SCALING_MAX_FREQ] / abs_max_freq
+        return avg_min * 100. / count, avg_max * 100. / count
 
     def refresh_now(self) -> None:
         for cpu in self._cpu_widgets:
-            cpu.refresh_static_data(True)
+            cpu.refresh_editable_data(True)
         self.periodic_refresh()
 
     def set_all_cpu_percentages(self, percentages: tuple[int, ...]) -> None:
@@ -80,17 +85,20 @@ class CPUGroupControlWidget(QGroupBox):
     @Slot(bool)
     def _processing_update(self, processing: bool) -> None:
         with QMutexLocker(self._mutex):
+            if not processing and self._currently_processing_count == 0:
+                return
+
+            previous_count: int = self._currently_processing_count
+
             if processing:
-                if self._currently_processing_count == 0:
-                    self.signal_processing.emit(True)
-                    self._apply_all.setDisabled(True)
                 self._currently_processing_count += 1
-            else:
-                if self._currently_processing_count > 0:
-                    self._currently_processing_count -= 1
-                    if self._currently_processing_count == 0:
-                        self.signal_processing.emit(False)
-                        self._apply_all.setDisabled(False)
+            elif previous_count > 0:
+                self._currently_processing_count -= 1
+
+            if previous_count == 0 or previous_count == 1:
+                is_processing: bool = self._currently_processing_count > 0
+                self.signal_processing.emit(is_processing)
+                self._apply_all.setDisabled(is_processing)
 
     def set_cpu_percentages(self, cpu_name: str, percentages: tuple[int, ...]) -> None:
         cpu: SingleCPUControlGroupWidget | None = self._map_cpu_widgets.get(cpu_name)

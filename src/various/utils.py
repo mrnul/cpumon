@@ -49,7 +49,7 @@ def parse_proc_stat() -> dict[str, ProcStat]:
 
 
 def get_rgb_based_on_value(value: int | float, max_value: int | float) -> tuple[int, int, int]:
-    t: float = float(value) / float(max_value)
+    t: float = float(value) / float(max_value) if max_value else 0.
     h: float = (1. - t) * 0.333
     r, g, b = colorsys.hsv_to_rgb(h, 1., 1.)
     return round(r * 255), round(g * 255), round(b * 255)

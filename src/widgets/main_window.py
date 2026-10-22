@@ -71,6 +71,8 @@ class MainWindow(QMainWindow):
         self._timer.timeout.connect(self._periodic_refresh)
         self._timer.start(1000)
 
+        self._log.append("Ready")
+
     def _periodic_refresh(self):
         with ui_update(self._central_widget):
             self._cpus_widget.periodic_refresh()
@@ -101,7 +103,6 @@ class MainWindow(QMainWindow):
         with ui_update(self._central_widget):
             self._master_slider.setDisabled(processing)
             self._refresh.setDisabled(processing)
-            self._master_slider.setDisabled(processing)
             self._profiles.setDisabled(processing)
             if not processing:
                 self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
