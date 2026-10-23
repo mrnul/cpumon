@@ -44,11 +44,11 @@ class CPUGroupControlWidget(QGroupBox):
         self._layout.addWidget(self._apply_all)
         self.setLayout(self._layout)
 
-    def periodic_refresh(self) -> None:
+    def refresh_non_editable_data(self) -> None:
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
-            cpu.periodic_refresh()
-            if cpu.cpu_data.name not in self._proc_stat:
+            cpu.refresh_non_editable_data()
+            if cpu.cpu_data.name not in self._proc_stat or cpu.cpu_data.name not in new_proc_stat:
                 continue
 
             cpu.set_cpu_usage(
@@ -72,7 +72,7 @@ class CPUGroupControlWidget(QGroupBox):
     def refresh_now(self) -> None:
         for cpu in self._cpu_widgets:
             cpu.refresh_editable_data(True)
-        self.periodic_refresh()
+        self.refresh_non_editable_data()
 
     def set_all_cpu_percentages(self, percentages: tuple[int, ...]) -> None:
         for cpu in self._cpu_widgets:

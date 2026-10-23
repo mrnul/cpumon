@@ -10,7 +10,7 @@ class TemperatureData:
     name: str = field(init=False)
     label: str = field(init=False)
     value_full_path: Path = field(init=False)
-    value: float = field(init=False)
+    value: float | None = field(init=False)
 
     def __post_init__(self):
         base_path = Path(self.base)
@@ -24,6 +24,9 @@ class TemperatureData:
         self.value_full_path = base_path.with_name(base_path.name + "_input")
         self.read_value()
 
-    def read_value(self) -> float:
-        self.value = int(self.value_full_path.read_text().strip()) / 1000.0
+    def read_value(self) -> float | None:
+        try:
+            self.value = int(self.value_full_path.read_text().strip()) / 1000.0
+        except (Exception,):
+            self.value = None
         return self.value

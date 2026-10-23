@@ -29,8 +29,13 @@ def parse_proc_stat() -> dict[str, ProcStat]:
                 continue
 
             parts = line.split()
+            if len(parts) == 0:
+                continue
             cpu_id = parts[0]
             stats = list(map(int, parts[1:]))
+
+            if len(stats) < 8:
+                continue
 
             cpu_stats[cpu_id] = ProcStat(
                 cpu_id=cpu_id,

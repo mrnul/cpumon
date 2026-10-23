@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
 
     def _periodic_refresh(self):
         with ui_update(self._central_widget):
-            self._cpus_widget.periodic_refresh()
+            self._cpus_widget.refresh_non_editable_data()
             self._temperatures_and_fans_widget.refresh()
 
     @Slot(Profile)

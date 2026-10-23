@@ -77,7 +77,7 @@ class SingleCPUControlGroupWidget(QGroupBox):
         self.setDisabled(processing)
         self.signal_processing.emit(processing)
 
-    def periodic_refresh(self) -> None:
+    def refresh_non_editable_data(self) -> None:
         try:
             self._refresh_disabled()
             self._freq_widget.refresh_current_freq()

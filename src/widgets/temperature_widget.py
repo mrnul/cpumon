@@ -20,6 +20,8 @@ class TemperatureWidget(QWidget):
         self.setLayout(self._layout)
 
     def _format_temp(self) -> str:
+        if not self.data.value:
+            return "<No Data>"
         return f"{self.data.value:.2f} °C"
 
     def refresh_value(self):

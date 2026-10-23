@@ -20,6 +20,8 @@ class FanWidget(QWidget):
         self.setLayout(self._layout)
 
     def _format_rmp(self) -> str:
+        if not self.data.value:
+            return "<No Data>"
         return f"{self.data.value} rpm"
 
     def refresh_value(self):
