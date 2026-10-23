@@ -83,6 +83,7 @@ def discover_temperature_bases() -> list[str]:
         if item.name.startswith("temp") and item.name.endswith("input")
     ]
 
+
 def discover_fan_bases() -> list[str]:
     return [
         str(item).removesuffix("_input") for hwmon in discover_hwmon_dirs() for item in hwmon.iterdir()
@@ -90,7 +91,10 @@ def discover_fan_bases() -> list[str]:
     ]
 
 
-def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], per_row: int = 8) -> None:
+def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], max_width: int = 800) -> None:
+    widget_width = max(w.sizeHint().width() for w in widgets)
+    per_row = max(1, max_width // widget_width)
+
     for index, widget in enumerate(widgets):
         row, column = divmod(index, per_row)
         layout.addWidget(widget, row, column)
