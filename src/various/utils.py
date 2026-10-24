@@ -91,10 +91,7 @@ def discover_fan_bases() -> list[str]:
     ]
 
 
-def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], max_width: int = 800) -> None:
-    widget_width = max(w.sizeHint().width() for w in widgets)
-    per_row = max(1, max_width // widget_width)
-
+def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], per_row: int = 8) -> None:
     for index, widget in enumerate(widgets):
         row, column = divmod(index, per_row)
         layout.addWidget(widget, row, column)

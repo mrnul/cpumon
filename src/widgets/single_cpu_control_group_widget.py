@@ -2,19 +2,20 @@ from pathlib import Path
 
 from PySide6.QtCore import Signal, Slot, QTimer
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QVBoxLayout, QPushButton, QGroupBox, QProgressBar
+from PySide6.QtWidgets import QVBoxLayout, QPushButton, QProgressBar
 
 from src.data.cpu_data import CPUData, CPUDataEnum
 from src.various.utils import get_rgb_based_on_value
 from src.widgets.freq_widget import FreqWidget
+from src.widgets.group_box_base import GroupBoxBase
 
 
-class SingleCPUControlGroupWidget(QGroupBox):
+class SingleCPUControlGroupWidget(GroupBoxBase):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
     def __init__(self, cpu_path: Path):
-        super().__init__("")
+        super().__init__("", None)
 
         self._cpu_data: CPUData = CPUData(cpu_path)
         self._utilization_bar: QProgressBar = QProgressBar()
@@ -34,11 +35,11 @@ class SingleCPUControlGroupWidget(QGroupBox):
         self._apply.clicked.connect(self.apply_min_max_scaling_freq)
 
         self._layout: QVBoxLayout = QVBoxLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._utilization_bar)
         self._layout.addWidget(self._freq_widget)
         self._layout.addWidget(self._disable)
         self._layout.addWidget(self._apply)
+        self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
     @Slot(bool)

@@ -31,11 +31,11 @@ class FreqWidget(QWidget):
         self._spinbox_max.valueChanged.connect(self._sync_spinboxes_to_slider)
 
         self._layout: QVBoxLayout = QVBoxLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._current_freq)
         self._layout.addWidget(self._slider_min_max)
         self._layout.addWidget(self._spinbox_min)
         self._layout.addWidget(self._spinbox_max)
+        self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
         self.refresh_all()

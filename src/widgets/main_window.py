@@ -2,8 +2,8 @@ from PySide6.QtCore import QTimer, Slot, QCoreApplication
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QTextBrowser, QPushButton
 
-from src.data.settings import Settings
 from src.data.settings import Profile
+from src.data.settings import Settings
 from src.various.utils import discover_cpu_dirs, discover_fan_bases
 from src.various.utils import discover_temperature_bases
 from src.various.utils import ui_update
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
 
             self.move(middle_x, middle_y)
         except (TypeError, IndexError) as e:
-            self._log.append(str(e))
+            self._log.append(f"Error while trying to detect monitors: {str(e)}")
             pass
 
         self._timer: QTimer = QTimer(self)
