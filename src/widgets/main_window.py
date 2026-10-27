@@ -7,10 +7,10 @@ from src.data.settings import Settings
 from src.various.utils import discover_cpu_dirs, discover_fan_bases
 from src.various.utils import discover_temperature_bases
 from src.various.utils import ui_update
-from src.widgets.cpu_group_control_widget import CPUGroupControlWidget
-from src.widgets.master_slider_group_widget import MasterSliderGroupWidget
-from src.widgets.profile_group_widget import ProfileGroupWidget
-from src.widgets.temperature_fan_group_widget import TemperatureFanGroupWidget
+from src.widgets.cpu_group_control_widget import CPUGroupControlWidgetWidget
+from src.widgets.master_slider_group_widget import MasterSliderGroupWidgetWidget
+from src.widgets.profile_group_widget import ProfileGroupWidgetWidget
+from src.widgets.temperature_fan_group_widget import TemperatureFanGroupWidgetWidget
 
 
 class MainWindow(QMainWindow):
@@ -23,13 +23,14 @@ class MainWindow(QMainWindow):
 
         self._parent_layout: QVBoxLayout = QVBoxLayout(self._central_widget)
 
-        self._temperatures_and_fans_widget: TemperatureFanGroupWidget = TemperatureFanGroupWidget("Temperatures and Fans", discover_temperature_bases(), discover_fan_bases())
+        self._temperatures_and_fans_widget: TemperatureFanGroupWidgetWidget = TemperatureFanGroupWidgetWidget(
+            "Temperatures and Fans", discover_temperature_bases(), discover_fan_bases())
 
-        self._cpus_widget: CPUGroupControlWidget = CPUGroupControlWidget("CPU Control", discover_cpu_dirs())
+        self._cpus_widget: CPUGroupControlWidgetWidget = CPUGroupControlWidgetWidget("CPU Control", discover_cpu_dirs())
         self._cpus_widget.signal_processing.connect(self._set_processing_state)
         self._cpus_widget.signal_message.connect(self._handle_message)
 
-        self._master_slider: MasterSliderGroupWidget = MasterSliderGroupWidget("Master Control")
+        self._master_slider: MasterSliderGroupWidgetWidget = MasterSliderGroupWidgetWidget("Master Control")
         self._master_slider.signal_apply.connect(self._apply_master_values)
         self._master_slider.slider.setValue(self._cpus_widget.avg_min_max_scaling_freq_percentage())
 
@@ -38,7 +39,7 @@ class MainWindow(QMainWindow):
             settings_path = QCoreApplication.arguments()[1]
         self._settings: Settings = Settings.from_file(settings_path)
 
-        self._profiles: ProfileGroupWidget = ProfileGroupWidget("Profile Control", self._settings.profiles)
+        self._profiles: ProfileGroupWidgetWidget = ProfileGroupWidgetWidget("Profile Control", self._settings.profiles)
         self._profiles.signal_profile_clicked.connect(self._apply_profile)
 
         self._refresh: QPushButton = QPushButton("Refresh all Now")
@@ -83,12 +84,17 @@ class MainWindow(QMainWindow):
         with ui_update(self._central_widget):
             for item in profile.config:
                 if item.cpu is None:
-                    self._master_slider.slider.setValue((item.min_value,  item.max_value))
-                    self._cpus_widget.set_all_cpu_percentages((item.min_value,  item.max_value))
+                    self._cpus_widget.set_all_disabled(False)
+                    self._master_slider.slider.setValue((item.min_value, item.max_value))
+                    self._cpus_widget.set_all_cpu_percentages((item.min_value, item.max_value))
                     self._cpus_widget.apply_all_cpu_values()
                 else:
-                    self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
-                    self._cpus_widget.apply_cpu_freq_values(item.cpu)
+                    if item.min_value == -1 and item.max_value == -1:
+                        self._cpus_widget.set_disabled(item.cpu, True)
+                    else:
+                        self._cpus_widget.set_disabled(item.cpu, False)
+                        self._cpus_widget.set_cpu_percentages(item.cpu, (item.min_value, item.max_value))
+                        self._cpus_widget.apply_cpu_freq_values(item.cpu)
 
     @Slot()
     def _refresh_now(self) -> None:

@@ -2,10 +2,10 @@ from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtWidgets import QPushButton, QVBoxLayout
 from superqt import QRangeSlider
 
-from src.widgets.group_box_base import GroupBoxBase
+from src.widgets.base.group_box_widget import GroupBoxWidget
 
 
-class MasterSliderGroupWidget(GroupBoxBase):
+class MasterSliderGroupWidgetWidget(GroupBoxWidget):
     signal_apply = Signal()
 
     def __init__(self, title: str):

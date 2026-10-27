@@ -6,11 +6,11 @@ from PySide6.QtWidgets import QVBoxLayout, QPushButton, QProgressBar
 
 from src.data.cpu_data import CPUData, CPUDataEnum
 from src.various.utils import get_rgb_based_on_value
+from src.widgets.base.group_box_widget import GroupBoxWidget
 from src.widgets.freq_widget import FreqWidget
-from src.widgets.group_box_base import GroupBoxBase
 
 
-class SingleCPUControlGroupWidget(GroupBoxBase):
+class SingleCPUControlGroupWidgetWidget(GroupBoxWidget):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
@@ -22,7 +22,7 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
         self._utilization_bar.setRange(0, 100)
         self._utilization_bar.setValue(0)
 
-        self.setTitle(self._cpu_data.name)
+        self.setTitle(self._cpu_data.cpu_name)
         self.setToolTip(str(cpu_path))
 
         self._freq_widget: FreqWidget = FreqWidget(self._cpu_data)
@@ -42,10 +42,9 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
         self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
-    @Slot(bool)
-    def _disable_clicked(self, checked: bool) -> None:
+    def set_disabled(self, disabled: bool) -> None:
         self._set_processing_state(True)
-        new_state: int = 0 if checked else 1
+        new_state: int = 0 if disabled else 1
         try:
             self._cpu_data.write(CPUDataEnum.ONLINE, new_state)
         except Exception as e:
@@ -56,6 +55,10 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
             self.refresh_editable_data()
             self._freq_widget.refresh_all()
             self.set_cpu_usage(0)
+
+    @Slot(bool)
+    def _disable_clicked(self, checked: bool) -> None:
+        self.set_disabled(checked)
 
     def _refresh_disabled(self) -> None:
         if not self._disable.isCheckable():
@@ -83,7 +86,7 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
             self._refresh_disabled()
             self._freq_widget.refresh_current_freq()
         except Exception as e:
-            self.signal_message.emit(f"Error getting current frequency {self._cpu_data.name}: {str(e)}")
+            self.signal_message.emit(f"Error getting current frequency {self._cpu_data.cpu_name}: {str(e)}")
 
     @Slot()
     def apply_min_max_scaling_freq(self) -> None:
@@ -93,7 +96,7 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
             self._cpu_data.write(CPUDataEnum.SCALING_MIN_FREQ, min_value)
             self._cpu_data.write(CPUDataEnum.SCALING_MAX_FREQ, max_value)
             self.signal_message.emit(
-                f"Scaling frequencies {self._cpu_data.name} changed to: {min_value, max_value}")
+                f"Scaling frequencies {self._cpu_data.cpu_name} changed to: {min_value, max_value}")
         except Exception as e:
             self.signal_message.emit(
                 f"Error applying scaling frequencies {min_value, max_value}: {str(e)}"
@@ -113,7 +116,7 @@ class SingleCPUControlGroupWidget(GroupBoxBase):
                 ))
                 self._refresh_disabled()
             except Exception as e:
-                self.signal_message.emit(f"Error refreshing static data {self._cpu_data.name}: {str(e)}")
+                self.signal_message.emit(f"Error refreshing static data {self._cpu_data.cpu_name}: {str(e)}")
             finally:
                 self._set_processing_state(False)
 

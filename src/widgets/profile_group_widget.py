@@ -2,10 +2,10 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
 from src.data.settings import Profile
-from src.widgets.group_box_base import GroupBoxBase
+from src.widgets.base.group_box_widget import GroupBoxWidget
 
 
-class ProfileGroupWidget(GroupBoxBase):
+class ProfileGroupWidgetWidget(GroupBoxWidget):
     signal_profile_clicked = Signal(Profile)
 
     def __init__(self, title: str, profiles: list[Profile]):

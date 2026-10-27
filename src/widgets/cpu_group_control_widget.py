@@ -7,11 +7,11 @@ from src.data.cpu_data import CPUDataEnum
 from src.data.proc_stat import ProcStat
 from src.various.utils import parse_proc_stat
 from src.various.utils import populate_grid_layout
-from src.widgets.single_cpu_control_group_widget import SingleCPUControlGroupWidget
-from src.widgets.group_box_base import GroupBoxBase
+from src.widgets.base.group_box_widget import GroupBoxWidget
+from src.widgets.single_cpu_control_group_widget import SingleCPUControlGroupWidgetWidget
 
 
-class CPUGroupControlWidget(GroupBoxBase):
+class CPUGroupControlWidgetWidget(GroupBoxWidget):
     signal_processing = Signal(bool)
     signal_message = Signal(str)
 
@@ -25,15 +25,15 @@ class CPUGroupControlWidget(GroupBoxBase):
         self._layout: QVBoxLayout = QVBoxLayout()
         self._cpu_widget_layout: QGridLayout = QGridLayout()
 
-        self._cpu_widgets = [SingleCPUControlGroupWidget(cpu_path) for cpu_path in cpu_paths]
+        self._cpu_widgets = [SingleCPUControlGroupWidgetWidget(cpu_path) for cpu_path in cpu_paths]
         self._apply_all: QPushButton = QPushButton("Apply all")
         self._apply_all.clicked.connect(self.apply_all_cpu_values)
-        self._map_cpu_widgets: dict[str, SingleCPUControlGroupWidget] = {
-            cpu.cpu_data.name: cpu
+        self._map_cpu_widgets: dict[str, SingleCPUControlGroupWidgetWidget] = {
+            cpu.cpu_data.cpu_name: cpu
             for cpu in self._cpu_widgets
         }
 
-        self._cpu_widgets.sort(key=lambda x: x.cpu_data.index)
+        self._cpu_widgets.sort(key=lambda x: x.cpu_data.cpu_index)
 
         for cpu_widget in self._cpu_widgets:
             cpu_widget.signal_message.connect(self.signal_message.emit)
@@ -49,11 +49,11 @@ class CPUGroupControlWidget(GroupBoxBase):
         new_proc_stat: dict[str, ProcStat] = parse_proc_stat()
         for cpu in self._cpu_widgets:
             cpu.refresh_non_editable_data()
-            if cpu.cpu_data.name not in self._proc_stat or cpu.cpu_data.name not in new_proc_stat:
+            if cpu.cpu_data.cpu_name not in self._proc_stat or cpu.cpu_data.cpu_name not in new_proc_stat:
                 continue
 
             cpu.set_cpu_usage(
-                round(new_proc_stat[cpu.cpu_data.name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.name]))
+                round(new_proc_stat[cpu.cpu_data.cpu_name].calculate_cpu_usage(self._proc_stat[cpu.cpu_data.cpu_name]))
             )
         self._proc_stat = new_proc_stat
 
@@ -77,7 +77,7 @@ class CPUGroupControlWidget(GroupBoxBase):
 
     def set_all_cpu_percentages(self, percentages: tuple[int, ...]) -> None:
         for cpu in self._cpu_widgets:
-            self.set_cpu_percentages(cpu.cpu_data.name, percentages)
+            self.set_cpu_percentages(cpu.cpu_data.cpu_name, percentages)
 
     def apply_all_cpu_values(self) -> None:
         for cpu in self._cpu_widgets:
@@ -85,7 +85,7 @@ class CPUGroupControlWidget(GroupBoxBase):
 
     @Slot(bool)
     def _processing_update(self, processing: bool) -> None:
-        with QMutexLocker(self._mutex):
+        with (((QMutexLocker(self._mutex)))):
             if not processing and self._currently_processing_count == 0:
                 return
 
@@ -96,13 +96,14 @@ class CPUGroupControlWidget(GroupBoxBase):
             elif previous_count > 0:
                 self._currently_processing_count -= 1
 
-            if previous_count == 0 or previous_count == 1:
+            if (previous_count == 0 and self._currently_processing_count == 1
+            ) or (previous_count == 1 and self._currently_processing_count == 0):
                 is_processing: bool = self._currently_processing_count > 0
                 self.signal_processing.emit(is_processing)
                 self._apply_all.setDisabled(is_processing)
 
     def set_cpu_percentages(self, cpu_name: str, percentages: tuple[int, ...]) -> None:
-        cpu: SingleCPUControlGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
+        cpu: SingleCPUControlGroupWidgetWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return
@@ -110,8 +111,19 @@ class CPUGroupControlWidget(GroupBoxBase):
         max_value: int = percentages[1] * cpu.cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] // 100
         cpu.set_min_max_scaling_freq((min_value, max_value))
 
+    def set_disabled(self, cpu_name: str, disabled: bool) -> None:
+        cpu: SingleCPUControlGroupWidgetWidget | None = self._map_cpu_widgets.get(cpu_name)
+        if not cpu:
+            self.signal_message.emit(f"CPU {cpu_name} not found")
+            return
+        cpu.set_disabled(disabled)
+
+    def set_all_disabled(self, disabled: bool) -> None:
+        for cpu in self._cpu_widgets:
+            cpu.set_disabled(disabled)
+
     def apply_cpu_freq_values(self, cpu_name: str) -> None:
-        cpu: SingleCPUControlGroupWidget | None = self._map_cpu_widgets.get(cpu_name)
+        cpu: SingleCPUControlGroupWidgetWidget | None = self._map_cpu_widgets.get(cpu_name)
         if not cpu:
             self.signal_message.emit(f"CPU {cpu_name} not found")
             return

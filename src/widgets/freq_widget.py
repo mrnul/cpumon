@@ -42,35 +42,26 @@ class FreqWidget(QWidget):
 
     def refresh_all(self):
         self._cpu_data.refresh_all()
-        self._current_freq.setRange(
+
+        abs_min_max: tuple[int, int] = (
             self._cpu_data[CPUDataEnum.ABSOLUTE_MIN_FREQ] or 0,
             self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] or 0
         )
+        scaling_min_max: tuple[int, int] = (
+            self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ] or 0,
+            self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ] or 0
+        )
+        self._current_freq.setRange(abs_min_max[0], abs_min_max[1])
         self._current_freq.setValue(0)
 
-        self._slider_min_max.setRange(
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MIN_FREQ] or 0,
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] or 0
-        )
-        self._slider_min_max.setValue(
-            (
-                self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ] or 0,
-                self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ] or 0
-            )
-        )
+        self._slider_min_max.setRange(abs_min_max[0], abs_min_max[1])
+        self._slider_min_max.setValue(scaling_min_max)
 
-        self._spinbox_min.setRange(
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MIN_FREQ] or 0,
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] or 0
-        )
-        self._spinbox_min.setValue(self._cpu_data[CPUDataEnum.SCALING_MIN_FREQ] or 0)
+        self._spinbox_min.setRange(abs_min_max[0], abs_min_max[1])
+        self._spinbox_min.setValue(scaling_min_max[0])
 
-
-        self._spinbox_max.setRange(
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MIN_FREQ] or 0,
-            self._cpu_data[CPUDataEnum.ABSOLUTE_MAX_FREQ] or 0
-        )
-        self._spinbox_max.setValue(self._cpu_data[CPUDataEnum.SCALING_MAX_FREQ] or 0)
+        self._spinbox_max.setRange(abs_min_max[0], abs_min_max[1])
+        self._spinbox_max.setValue(scaling_min_max[1])
 
     def refresh_current_freq(self) -> None:
         frequency: int = self._cpu_data.read(CPUDataEnum.CURRENT_FREQUENCY, 0)
@@ -105,18 +96,17 @@ class FreqWidget(QWidget):
 
     @Slot(tuple)
     def _sync_slider_to_spinboxes(self, value: tuple[int, int]) -> None:
-        with QSignalBlocker(self._spinbox_min):
+        with QSignalBlocker(self._spinbox_min), QSignalBlocker(self._spinbox_max):
             self._spinbox_min.setValue(value[0])
-        with QSignalBlocker(self._spinbox_max):
             self._spinbox_max.setValue(value[1])
 
     @Slot()
     def _sync_spinboxes_to_slider(self) -> None:
-        min_value, max_value = self._spinbox_min.value(), self._spinbox_max.value()
+        min_value = self._spinbox_min.value()
+        max_value = self._spinbox_max.value()
+
         if min_value > max_value:
             min_value, max_value = max_value, min_value
-            with QSignalBlocker(self._spinbox_min):
-                self._spinbox_min.setValue(min_value)
-                self._spinbox_max.setValue(max_value)
+
         with QSignalBlocker(self._slider_min_max):
             self._slider_min_max.setValue((min_value, max_value))
