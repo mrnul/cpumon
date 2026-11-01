@@ -77,18 +77,21 @@ def discover_hwmon_dirs() -> list[Path]:
     return discover_dirs("/sys/class/hwmon", "hwmon[0-9]*")
 
 
-def discover_temperature_bases() -> list[str]:
+def discover_sensor_bases(prefix: str) -> list[str]:
     return [
-        str(item).removesuffix("_input") for hwmon in discover_hwmon_dirs() for item in hwmon.iterdir()
-        if item.name.startswith("temp") and item.name.endswith("input")
+        str(item).removesuffix("_input")
+        for hwmon in discover_hwmon_dirs()
+        for item in hwmon.iterdir()
+        if item.name.startswith(prefix) and item.name.endswith("_input")
     ]
+
+
+def discover_temperature_bases() -> list[str]:
+    return discover_sensor_bases("temp")
 
 
 def discover_fan_bases() -> list[str]:
-    return [
-        str(item).removesuffix("_input") for hwmon in discover_hwmon_dirs() for item in hwmon.iterdir()
-        if item.name.startswith("fan") and item.name.endswith("input")
-    ]
+    return discover_sensor_bases("fan")
 
 
 def populate_grid_layout(layout: QGridLayout, widgets: list[QWidget], per_row: int = 8) -> None:
